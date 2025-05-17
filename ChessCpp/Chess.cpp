@@ -331,9 +331,9 @@ std::vector<std::pair<int, int>> Chess::pieceLogic(char piece, std::pair<int, in
     return allMoveForThisPiece; // Return coordination
 }
 
-bool Chess::pieceRule(std::pair<int, int> coordination){
-    
-}
+//bool Chess::pieceRule(std::pair<int, int> coordination){
+//    
+//}
     
 
 bool Chess::Pawn(bool isCapturing, std::pair<int, int>& coordination){
@@ -436,38 +436,47 @@ void Chess::newGame(){
     printBoard();
     // Updates every turn
     while (true) {
+        // Calculate all possible moves
+        findAllPossibleMoves(); // Return vector of positions
         
         // Get input position
         std::cout << "Enter position: ";
         std::cin >> position;
         
+        // If position is in allMove list, then it's legal move
+        if (std::find(allPossibleMoves.begin(), allPossibleMoves.end(), position) != allPossibleMoves.end()) {
+            // Legal
+        }
+        
         // Check if input is valid -> moves is inside board
-        if(!isValidNote(position)) continue;
+//        if(!isValidNote(position)) continue;
         
         // Convert notes into numerical expression and return if it's pawn move
         bool isPawnMove = toNumberAndIsPawnMove(position, coordination);
         
 //        std::cout << coordination.first << coordination.second << std::endl;
         
+        // Make move since it's been checked as a legal move
+        
         // If there is capturing, check legality
-        if((isCapturing(coordination))) {
-            if(!isLegal(coordination)){
-                std::cout << "You cannot take your own piece\n\n";
-                continue;
-            }
-            
-            // Capturing move
-            if(!(isPawnMove ? Pawn(true, coordination) : PieceMove(position[0], true))) {
-                std::cout << "Illegal move \n";
-                continue;
-            }
-        }else{
-            if(!(isPawnMove ? Pawn(false, coordination) : PieceMove(position[0], false))){
-                std::cout << "Illegal move \n";
-                continue;
-            }
-
-        }
+//        if((isCapturing(coordination))) {
+//            if(!isLegal(coordination)){
+//                std::cout << "You cannot take your own piece\n\n";
+//                continue;
+//            }
+//            
+//            // Capturing move
+//            if(!(isPawnMove ? Pawn(true, coordination) : PieceMove(position[0], true))) {
+//                std::cout << "Illegal move \n";
+//                continue;
+//            }
+//        }else{
+//            if(!(isPawnMove ? Pawn(false, coordination) : PieceMove(position[0], false))){
+//                std::cout << "Illegal move \n";
+//                continue;
+//            }
+//
+//        }
         
         printBoard();
         
