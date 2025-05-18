@@ -52,7 +52,7 @@ void Chess::customBoard(int option){
             board[3][4] = 'r';
             board[7][4] = 'n';
             board[3][6] = 'P';
-            board[3][3] = 'p';
+            board[5][2] = 'b';
             board[5][6] = 'p';
             break;
         default:
@@ -297,6 +297,7 @@ void Chess::printAllPossibleMoves(){
 
 std::vector<std::pair<int, int>> Chess::pieceLogic(char piece, std::pair<int, int> place){
     std::vector<std::pair<int, int>> allMoveForThisPiece;
+    allMoveForThisPiece.clear();
     switch (piece) {
         case 'k':
             //
@@ -305,8 +306,26 @@ std::vector<std::pair<int, int>> Chess::pieceLogic(char piece, std::pair<int, in
             //
             break;
         case 'b':
-            //
+        {
+            // Diagonal line
+            std::pair<int, int> move;
+            for (int i = -9; i < 9; i++) {
+                if (i == 0) continue;
+                
+                // LT to RB
+                if (place.first + i >= 0 && place.first + i <=7 && place.second + i >= 0 && place.second + i <=7) {
+                    move = {place.first + i, place.second + i};
+                    if (Bishop(place, move)) allMoveForThisPiece.push_back(move);
+                }
+                
+                // LB to RT
+                if (place.first - i >= 0 && place.first - i <=7 && place.second + i >= 0 && place.second + i <=7) {
+                    move = {place.first - i, place.second + i};
+                    if (Bishop(place, move)) allMoveForThisPiece.push_back(move);
+                }
+            }
             break;
+        }
         case 'n':
             //
             break;
@@ -314,15 +333,19 @@ std::vector<std::pair<int, int>> Chess::pieceLogic(char piece, std::pair<int, in
         {
             // Straight line
             std::pair<int, int> move;
-            for (int i = -7; i < 7; ++i) {
+            for (int i = -9; i < 9; i++) {
                 if (i == 0) continue;
+                
+                // All move on row
                 if (place.first + i >= 0 && place.first + i <=7) {
                     move = {place.first + i, place.second};
-                    if (Rook(place, move)) allMoveForThisPiece.push_back({place.first + i, place.second});
+                    if (Rook(place, move)) allMoveForThisPiece.push_back(move);
                 }
+                
+                // All move on col
                 if (place.second + i >= 0 && place.second + i <=7) {
                     move = {place.first, place.second + i};
-                    if(Rook(place, move)) allMoveForThisPiece.push_back({place.first, place.second + i});
+                    if(Rook(place, move)) allMoveForThisPiece.push_back(move);
                 }
             }
             break;
@@ -399,6 +422,41 @@ std::vector<std::pair<int, int>> Chess::pieceLogic(char piece, std::pair<int, in
 bool Chess::pieceRule(std::pair<int, int> coordination){
     return false;
 }
+
+bool Chess::Bishop(std::pair<int, int> &pointA, std::pair<int, int> &pointB){
+    // Cannot take own piece
+    // Cannot move through pieces
+    
+    // Cannot take own piece
+    if (isWhiteTurn ? islower(board[pointB.first][pointB.second]):isupper(board[pointB.first][pointB.second])) return false;
+    
+    // Can take enemy piece
+    if (isWhiteTurn ? isupper(board[pointB.first][pointB.second]):islower(board[pointB.first][pointB.second])) return true;
+    
+    // No pieces is occupying the way
+    int disY = pointB.first - pointA.first;
+    int disX = pointB.second - pointA.second;
+    
+    std::pair<bool, bool> isNegaDists;
+    
+    isNegaDists.first = disY < 0 ? true: false;
+    isNegaDists.second = disX < 0? true: false;
+    
+    disX = abs(disX);
+    disY = abs(disY);
+    
+    
+    
+    for (int i = 1; i < disX; i++) {
+        if (board[pointA.first + (isNegaDists.first? -i: i)][pointA.second + (isNegaDists.second? -i: i)] != '.') {
+            return false;
+        }
+    }
+    
+    
+    return true;
+}
+
     
 bool Chess::Rook(std::pair<int, int> &pointA, std::pair<int, int> &pointB){
     // Cannot take own piece
@@ -416,19 +474,17 @@ bool Chess::Rook(std::pair<int, int> &pointA, std::pair<int, int> &pointB){
     
     if (pointB.first - pointA.first == 0) distance = pointB.second - pointA.second;
     else distance = pointB.first - pointA.first;
-    
-    distance = abs(distance);
-    
+
     bool isNegaDist = (distance < 0? true : false);
+    distance = abs(distance);
     
     for (int i = 1; i < distance; i++) {
         if (isSameRow) {
-            if (board[pointA.first][pointA.second + (isNegaDist? i : -i)] != '.') return false;
+            if (board[pointA.first][pointA.second + (!isNegaDist? i : -i)] != '.') return false;
         }else{
-            if (board[pointB.first][pointB.second + (isNegaDist? i : -i)] != '.') return false;
+            if (board[pointA.first + (!isNegaDist? i : -i)][pointA.second] != '.') return false;
         }
     }
-    
     return true;
 }
 

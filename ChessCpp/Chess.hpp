@@ -92,6 +92,8 @@ class Chess {
     // Check validation when moved from point a to b
     bool Pawn(std::pair<int, int>& pointA, std::pair<int, int>& pointB);
     bool Rook(std::pair<int, int>& pointA, std::pair<int, int>& pointB);
+    bool Bishop(std::pair<int, int>& pointA, std::pair<int, int>& pointB);
+
     
     // Other pieces move, also check validation
     bool PieceMove(char piece, bool isCapturing);
