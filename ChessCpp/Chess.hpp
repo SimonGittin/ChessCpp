@@ -15,6 +15,7 @@
 #include <vector>
 #include <algorithm>
 #include <unordered_map>
+#include <utility>
 
 #endif /* Chess_hpp */
 
@@ -30,13 +31,28 @@
 // if undercheck, must get out of check first
 // Shows legal move for pieces every turn
 
+struct PieceMove {
+    // Position (string) h3, Qd4
+    std::string startPos;
+    std::string endPos;
+    
+    // Coordination
+    std::pair<int, int> startPoint;
+    std::pair<int, int> endPoint;
+    
+    // Piece type
+    char pieceT;
+    
+    std::string note;
+};
+
 
 class Chess {
     
     char board[8][8];
     std::string position;
     std::pair<int, int> coordination;
-    std::vector<std::string> allPossibleMoves;
+    std::vector<PieceMove> pieceMove;
     bool isWhiteTurn = true;
     
     // Init board
@@ -51,13 +67,17 @@ class Chess {
     // e.g. n = knight
     std::string fullName(char piece);
     
-    // Valid notations
-    bool isValidNote(std::string position);
+    // Returns int vec of repeated indices, work with processMoves
+    std::vector<int> repeatedIndices(const std::vector<std::string>& vec);
+    
+    std::vector<std::string> processMoves(std::vector<std::string>& rawMoves);
     
     // Turn string position into number expressions (e4)=> (4, 4) also return true if it's a pawn move
     bool toNumberAndIsPawnMove(std::string position, std::pair<int, int>& coordination);
     
-    // Turn int, int coordination to string position
+    // Simple coordination to notation function => {2, 3} => d6
+    std::string pointToPos(std::pair<int, int>);
+    // Turn <int, int> coordination into full string position e2e3, qf6f7
     std::string pieceToPosition(char piece, std::pair<int, int> pointA, std::pair<int, int> pointB);
     
     // Check if the move is a capture
@@ -71,15 +91,15 @@ class Chess {
     
     // Check validation when moved from point a to b
     bool Pawn(std::pair<int, int>& pointA, std::pair<int, int>& pointB);
+    bool Rook(std::pair<int, int>& pointA, std::pair<int, int>& pointB);
     
     // Other pieces move, also check validation
     bool PieceMove(char piece, bool isCapturing);
     
-    // Two same pieces may be moved to the same block, ask user which to move
-    void twoPiecePossible(char piece, std::vector<std::pair<int, int>> possibleMoves);
+    void makeMove(std::string pos);
     
     // Returns a list of all possible moves for player at that round
-    std::vector<std::string>& findAllPossibleMoves();
+    void findAllPossibleMoves();
     
     // Read the value
     void printAllPossibleMoves();
@@ -107,5 +127,6 @@ public:
     
     // When turn begins, check under checks first
     
-    
 };
+
+
