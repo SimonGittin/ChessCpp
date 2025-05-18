@@ -168,29 +168,27 @@ bool Chess::toNumberAndIsPawnMove(std::string position, std::pair<int, int>& coo
     return isPawnMove;
 }
 
-std::string Chess::toPosition(std::pair<int, int>& coordination){
+std::string Chess::pieceToPosition(char piece, std::pair<int, int> pointA, std::pair<int, int> pointB){
+    std::string note;
+    
+    // Pawn move do not need to specify pe4
+    if (piece != 'p' && piece != 'P') note += piece;
     
     // (6, 7) => h2, (2, 0) => a6
-    switch (coordination.second) {
-        case 0:
-            return "a" + std::to_string(8 - coordination.first);
-        case 1:
-            return "b" + std::to_string(8 - coordination.first);
-        case 2:
-            return "c" + std::to_string(8 - coordination.first);
-        case 3:
-            return "d" + std::to_string(8 - coordination.first);
-        case 4:
-            return "e" + std::to_string(8 - coordination.first);
-        case 5:
-            return "f" + std::to_string(8 - coordination.first);
-        case 6:
-            return "g" + std::to_string(8 - coordination.first);
-        case 7:
-            return "h" + std::to_string(8 - coordination.first);
-        default:
-            return "";
+    // Queen from a1 to a2 -> Qa1a2
+    std::string columns = "abcdefgh";
+    for (int i = 0; i < 8; ++i) {
+        if (pointA.second == i) {
+            note += std::string(1, columns[i]) + std::to_string(8 - pointA.first);
+        }
     }
+    
+    for (int i = 0; i < 8; ++i) {
+        if (pointB.second == i) {
+            note += std::string(1, columns[i]) + std::to_string(8 - pointB.first);
+        }
+    }
+    return note;
 }
 
 bool Chess::isCapturing(std::pair<int, int> &coordination){
@@ -210,57 +208,100 @@ bool Chess::isLegal(std::pair<int, int>& coordination){
     return false;
 }
 
-void Chess::twoPiecePossible(char piece, std::vector<std::pair<int, int>> possibleMoves){
-    std::string position; // User decides the correct piece
-    std::string options; // Concat of options
-    std::pair<int, int> chosenCoordination;
-    for (auto& move : possibleMoves){
-        options.append(toPosition(move));
-        options += ", ";
-    }
-    
-    std::cout << "Which " << fullName(piece) << " are you inferring to? " << options << std::endl ;
-    while (true) {
-        std::cin >> position;
-        
-        // Make move
-        toNumberAndIsPawnMove(position, chosenCoordination);
-        for (auto& move : possibleMoves){
-            if (chosenCoordination == move){
-                board[chosenCoordination.first][chosenCoordination.second] = '.';
-                return;
-            }
-        }
-        
-        std::cout << position << " is not one of the options, choose again: " << options << std::endl;
-    }
-}
+//void Chess::twoPiecePossible(char piece, std::pair<int, int> origin, std::pair<int, int> destination){
+//    // Find all pieces that conflicts
+//    std::string note;
+//    if (piece != 'p' && piece != 'P') {
+//        note += piece;
+//    }
+//    // Same row conflict -> Qbb2 & Qcb2 / ab3 & cb3 ==> ALSO happens on diff row & col but same destination
+//    if (origin.first == destination.first || (origin.first != destination.first && origin.second != destination.second)) {
+//        note +=  'h';
+//    }
+//    // Same col conflict -> Q1b2 & Q2b2
+//    if (origin.second == destination.second && ) {
+//        <#statements#>
+//    }
+//    // Same row and same column (more than 2 queens) -> Qb1b2 & Qb3b2 & Qa1b2
+//}
 
 std::vector<std::string>& Chess::findAllPossibleMoves(){
+    // Clean every time it's called
+    allPossibleMoves.clear();
+    
     // Using coordination, find pieces from left-top to right-top, ends at right-bottom
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
+            
+            // White turn, find white pieces
             if (isWhiteTurn && std::islower(board[i][j])) {
-                for (auto& move : pieceLogic(board[i][j], {i, j})) // Return vector of pairs
+                
+                // pieceLogic takes the piece type & current place, returns a vector of all possible moves(pair)
+                for (auto& move : pieceLogic(board[i][j], {i, j})) // Return vector of pairs of legal moves
                 {
-                    if (pieceRule(move)) allPossibleMoves.push_back(toPosition(move));
+                    if (std::find(allPossibleMoves.begin(), allPossibleMoves.end(), pieceToPosition(board[i][j], {i, j}, move)) != allPossibleMoves.end()) {
+                    }
+                    allPossibleMoves.push_back(pieceToPosition(board[i][j], {i, j}, move));
                 }
                     
             }
-            
-            if (!isWhiteTurn && std::isupper(board[i][j])) {
-                <#statements#>
-            }
-
         }
     }
+    printAllPossibleMoves();
+    std::vector<std::string> tempContainer;
     
+    std::cout << "size: " << allPossibleMoves.size() << std::endl;
     
-    
+    // Resolve for confliction
+    for (int i = 0; i < allPossibleMoves.size(); i++){
+        // Pawn move
+        if (allPossibleMoves[i].length() == 4) {
+            for (std::string& note : allPossibleMoves) {
+                
+                // Skip self
+                if (note == allPossibleMoves[i]){
+                    std::string combined;
+                    combined.push_back(note[2]);
+                    combined.push_back(note[3]);
+                    tempContainer.push_back(combined);
+                    continue;
+                }
+                
+                // Destination is equal, a1b2, c1b2 => ab2, cb2
+                if (allPossibleMoves[i][2] == note[2] && allPossibleMoves[i][3] == note[3]) {
+                    std::string combined;
+                    combined.push_back(allPossibleMoves[i][0]);
+                    combined.push_back(note[2]);
+                    combined.push_back(note[3]);
+                    tempContainer.push_back(combined);
+                    // = allPossibleMoves[i][0] + note[2] + note[3];
+                }
+                
+                // Destination is not equal, a1b2, c1c2 => b2, c2
+                else{
+                    std::string combined;
+                    combined.push_back(note[2]);
+                    combined.push_back(note[3]);
+                    tempContainer.push_back(combined);
+                }
+            }
+        }
+        allPossibleMoves.clear();
+        allPossibleMoves = tempContainer;
+    }
     return allPossibleMoves;
 }
 
-std::vector<std::pair<int, int>> Chess::pieceLogic(char piece, std::pair<int, int> coordination){
+
+void Chess::printAllPossibleMoves(){
+    for (auto& move : allPossibleMoves){
+        std::cout << move << ", ";
+    }
+    
+    std::cout << "\n";
+}
+
+std::vector<std::pair<int, int>> Chess::pieceLogic(char piece, std::pair<int, int> place){
     std::vector<std::pair<int, int>> allMoveForThisPiece;
     switch (piece) {
         case 'k':
@@ -279,129 +320,132 @@ std::vector<std::pair<int, int>> Chess::pieceLogic(char piece, std::pair<int, in
             //
             break;
         case 'p':
+        {
             // diagonal 1 move left, right, a move forward and 2 moves forward (4)
             //
             // If forward one move is invalid, then no move is possible, return function
             //
             // a9 -> invalid,
-            if (isWhiteTurn && (coordination.first - 1) < 0) {
+            if (isWhiteTurn && (place.first - 1) < 0) {
                 return allMoveForThisPiece;
             }
             
             // a0 -> invalid,
-            if (!isWhiteTurn && (coordination.first - 1) > 7) {
+            if (!isWhiteTurn && (place.first - 1) > 7) {
                 return allMoveForThisPiece;
             }
             
             // a8 -> promotion
-            if (isWhiteTurn && (coordination.first - 1) == 0) {
+            if (isWhiteTurn && (place.first - 1) == 0) {
                 // promotion();
                 break;
             }
             
             // a8 -> promotion
-            if (!isWhiteTurn && (coordination.first - 1) == 7) {
+            if (!isWhiteTurn && (place.first - 1) == 7) {
                 // promotion();
                 break;
             }
             
+            std::pair<int, int> move;
+            
             // One square moves
             for (int i = -1; i <= 1; i++) {
-                // left of a1 or i1 -> invalid
-                if (coordination.second + i < 0 || coordination.second + i > 7) {
+                
+                // Too left or too right -> invalid
+                if (place.second + i < 0 || coordination.second + i > 7) {
                     continue;
                 }
-                allMoveForThisPiece.push_back({isWhiteTurn? coordination.first - 1:
-                    coordination.first + 1, coordination.second + i});
+                
+                move = {isWhiteTurn? place.first - 1:place.first + 1, place.second + i};
+                
+                if (Pawn(place, move)) {
+                    allMoveForThisPiece.push_back(move);
+                }
             }
             
             // Long move
-            if (isWhiteTurn && coordination.first == 6) {
-                allMoveForThisPiece.push_back({4, coordination.second});
+            if (isWhiteTurn && place.first == 6) {
+                move = {4, place.second};
+                if (Pawn(place, move)){
+                    allMoveForThisPiece.push_back(move);
+                }
             }
             
             if (!isWhiteTurn && coordination.first == 1) {
-                allMoveForThisPiece.push_back({3, coordination.second});
+                move = {3, place.second};
+                if (Pawn(place, move)) {
+                    allMoveForThisPiece.push_back(move);
+                }
             }
             break;
+        }
         default:
             break;
-    }
+        
+    } // End of switch
     
     return allMoveForThisPiece; // Return coordination
 }
 
-//bool Chess::pieceRule(std::pair<int, int> coordination){
-//    
-//}
+bool Chess::pieceRule(std::pair<int, int> coordination){
+    return false;
+}
     
 
-bool Chess::Pawn(bool isCapturing, std::pair<int, int>& coordination){
-    // Diagonal move when capturing
-    // Cannot move back
+bool Chess::Pawn(std::pair<int, int>& pointA, std::pair<int, int>& pointB){
     // If pawn is on row 2 or 7, it can launch move with 2 blocks
     // En passant
-    if(isCapturing){
-        std::vector<std::pair<int, int>> possibleMoves;
-        // En passant
-        //
+    
+    // One square move for WHITE
+    if (isWhiteTurn && (pointB.first - pointA.first) == -1) {
+        // Capturing diagonally
+        if ((pointB.second - pointA.second == 1 || pointB.second - pointA.second == -1)) {
+            // Opponent's piece
+            if (std::string("KQRNBP").find(board[pointB.first][pointB.second]) != std::string::npos) {
+                return true;
+            }
+        }
         
+        // Forward move and not capturing
+        if (pointB.second == pointA.second && board[pointB.first][pointB.second] == '.') {
+            return true;
+        }
+    }
+    
+    // One square move for BLACK
+    if (!isWhiteTurn && (pointB.first - pointA.first) == 1) {
         // Capturing
-        // Check double directions
-        for (int i = -1; i <= 1; i+=2) {
-            
-            // (5, 2), (5, 4) are possible to go to (4, 3) for white
-            if (isWhiteTurn && board[coordination.first + 1][coordination.second + i] == 'p'){
-                possibleMoves.push_back({coordination.first + 1, coordination.second + i});
-            }
-            
-            // (5, 2), (5, 4) are possible to go to (6, 3) for black
-            if (!isWhiteTurn && board[coordination.first - 1][coordination.second + i] == 'P'){
-                possibleMoves.push_back({coordination.first - 1, coordination.second + i});
+        if ((pointB.second - pointA.second == 1 || pointB.second - pointA.second == -1)) {
+            // Opponent's piece
+            if (std::string("kqrnbp").find(board[pointB.first][pointB.second]) != std::string::npos) {
+                return true;
             }
         }
         
-        if (possibleMoves.size() > 1) {
-            twoPiecePossible((isWhiteTurn ? 'p':'P'), possibleMoves);
-            board[coordination.first][coordination.second] = isWhiteTurn ? 'p' : 'P'; // Fill new block
+        // Forward move and not capturing
+        if (pointB.second == pointA.second && board[pointB.first][pointB.second] == '.') {
             return true;
-        }else if (possibleMoves.size() == 1){
-            // Make the move
-            board[coordination.first][coordination.second] = isWhiteTurn ? 'p' : 'P'; // Fill new block
-            board[possibleMoves[0].first][possibleMoves[0].second] = '.'; // Get rid of block
-            return true;
-        }else return false;
-    }else{ // Not capturing
+        }
+    }
+    
+    // Long move
+    // If it's a 2 square move...
+    if ((isWhiteTurn && (pointB.first - pointA.first) == -2) || (!isWhiteTurn && (pointB.first - pointA.first) == 2)) {
         
-        // When white's turn, a move forward is (7, 2) to (6, 2), vice versa
-        if(isWhiteTurn && board[coordination.first + 1][coordination.second] == 'p'){
-            board[coordination.first][coordination.second] = 'p'; // Fill new block
-            board[coordination.first + 1][coordination.second] = '.';
+        // Two blocks ahead are unoccupied and is currently on rank 1 or 6
+        if (isWhiteTurn && board[pointA.first - 1][pointA.second] == '.' &&
+            board[pointA.first - 2][pointA.second] == '.' && pointA.first == 6) {
             return true;
         }
         
-        if(!isWhiteTurn && board[coordination.first - 1][coordination.second] == 'P'){
-            board[coordination.first][coordination.second] = 'P'; // Fill new block
-            board[coordination.first - 1][coordination.second] = '.';
-            return true;
-        }
-        
-        // Long move
-//        if (isWhiteTurn && board[coordination.first + 1][coordination.second] != '.')
-        if(isWhiteTurn && coordination.first == 4 && board[coordination.first + 2][coordination.second] == 'p'){
-            if (board[coordination.first + 1][coordination.second] != '.') return false; // No piece blocks way to long move
-            board[coordination.first][coordination.second] = 'p'; // Fill new block
-            board[coordination.first + 2][coordination.second] = '.';
-            return true;
-        }
-        if(!isWhiteTurn && coordination.first == 3 && board[coordination.first - 2][coordination.second] == 'P'){
-            if (board[coordination.first - 1][coordination.second] != '.') return false; // No piece blocks way to long move
-            board[coordination.first][coordination.second] = 'P'; // Fill new block
-            board[coordination.first - 2][coordination.second] = '.';
+        if (!isWhiteTurn && board[pointA.first + 1][pointA.second] == '.' &&
+            board[pointA.first + 2][pointA.second] == '.' && pointA.first == 1) {
             return true;
         }
     }
     return false;
+    
 }
 
 bool Chess::PieceMove(char piece, bool isCapturing){
@@ -438,6 +482,7 @@ void Chess::newGame(){
     while (true) {
         // Calculate all possible moves
         findAllPossibleMoves(); // Return vector of positions
+        printAllPossibleMoves();
         
         // Get input position
         std::cout << "Enter position: ";
@@ -446,17 +491,19 @@ void Chess::newGame(){
         // If position is in allMove list, then it's legal move
         if (std::find(allPossibleMoves.begin(), allPossibleMoves.end(), position) != allPossibleMoves.end()) {
             // Legal
+            std::cout << "it's legal move\n";
         }
         
         // Check if input is valid -> moves is inside board
 //        if(!isValidNote(position)) continue;
         
         // Convert notes into numerical expression and return if it's pawn move
-        bool isPawnMove = toNumberAndIsPawnMove(position, coordination);
+//        bool isPawnMove = toNumberAndIsPawnMove(position, coordination);
         
 //        std::cout << coordination.first << coordination.second << std::endl;
         
         // Make move since it's been checked as a legal move
+//        makeMove();
         
         // If there is capturing, check legality
 //        if((isCapturing(coordination))) {

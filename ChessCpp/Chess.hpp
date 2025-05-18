@@ -13,6 +13,8 @@
 #include <string>
 #include <cctype>
 #include <vector>
+#include <algorithm>
+#include <unordered_map>
 
 #endif /* Chess_hpp */
 
@@ -56,7 +58,7 @@ class Chess {
     bool toNumberAndIsPawnMove(std::string position, std::pair<int, int>& coordination);
     
     // Turn int, int coordination to string position
-    std::string toPosition(std::pair<int, int>& coordination);
+    std::string pieceToPosition(char piece, std::pair<int, int> pointA, std::pair<int, int> pointB);
     
     // Check if the move is a capture
     bool isCapturing(std::pair<int, int>& coordination);
@@ -67,8 +69,8 @@ class Chess {
     // When is capturing => piece rule, cannot take own piece
     bool isLegal(std::pair<int, int>& coordination);
     
-    // Pawn move, also check validation
-    bool Pawn(bool isCapturing, std::pair<int, int>& coordination);
+    // Check validation when moved from point a to b
+    bool Pawn(std::pair<int, int>& pointA, std::pair<int, int>& pointB);
     
     // Other pieces move, also check validation
     bool PieceMove(char piece, bool isCapturing);
@@ -79,7 +81,10 @@ class Chess {
     // Returns a list of all possible moves for player at that round
     std::vector<std::string>& findAllPossibleMoves();
     
-    std::vector<std::pair<int, int>> pieceLogic(char piece, std::pair<int, int> coordination);
+    // Read the value
+    void printAllPossibleMoves();
+    
+    std::vector<std::pair<int, int>> pieceLogic(char piece, std::pair<int, int> place);
     
     bool pieceRule(std::pair<int, int> coordination);
     
