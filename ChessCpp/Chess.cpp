@@ -10,7 +10,7 @@
 void Chess::initializeBoard(){
     // Fill board with .
     memset(board, '.', sizeof(board));
-    customBoard(2);
+    customBoard(0);
 }
 
 void Chess::customBoard(int option){
@@ -58,6 +58,9 @@ void Chess::customBoard(int option){
             board[2][3] = 'q';
             board[4][3] = 'r';
             break;
+        case 3:
+            board[1][4] = 'k';
+//            board[0][3] = 'P';
         default:
             break;
     }
@@ -72,23 +75,32 @@ void Chess::printBoard(){
     }
 }
 
-std::string Chess::fullName(char piece){
-    switch (piece) {
-        case 'k':
-            return "king";
-        case 'q':
-            return "queen";
-        case 'b':
-            return "bishop";
-        case 'n':
-            return "knight";
-        case 'r':
-            return "rook";
-        default:
-            return "pawn";
-            break;
+//std::string Chess::fullName(char piece){
+//    switch (piece) {
+//        case 'k':
+//            return "king";
+//        case 'q':
+//            return "queen";
+//        case 'b':
+//            return "bishop";
+//        case 'n':
+//            return "knight";
+//        case 'r':
+//            return "rook";
+//        default:
+//            return "pawn";
+//            break;
+//    }
+//    return "";
+//}
+
+void Chess::printAllPossibleMoves(){
+    
+    for (auto& move: (isWhiteTurn ? whiteMoves: blackMoves)){
+        std::cout << move.note << "  ";
     }
-    return "";
+    
+    std::cout << "\n";
 }
 
 std::vector<int> Chess::repeatedIndices(const std::vector<std::string>& vec){
@@ -245,9 +257,12 @@ std::string Chess::pointToPos(std::pair<int, int>& point){
 
 void Chess::findAllPossibleMoves(){
     // Clean every time it's called
-    pieceMove.clear();
+    whiteMoves.clear();
+    blackMoves.clear();
     struct PieceMove pm;
-    std::vector<std::string> notes;
+    std::vector<std::string> notes_w;
+    std::vector<std::string> notes_b;
+
     
     
     
@@ -257,51 +272,72 @@ void Chess::findAllPossibleMoves(){
             
             // A loop a piece
             // White turn, find white pieces
-            if (isWhiteTurn && std::islower(board[i][j])) {
                 
                 // pieceLogic takes the piece type & current place, returns a vector of all possible moves(pair)
                 // A loop a move for a piece
-                std::pair<int, int> p = {i, j};
-                for (auto& move : pieceLogic(board[i][j], p)) // Return vector of pairs of legal moves
-                {
-                    // pos => pointToPos(coord), ...
-                    // coord => {i, j}, pieceLogic(...)[i]
-                    // piece => board[i][j]
-                    // note = piece + startPos + endPos
-                    pm.pieceT = board[i][j];
-                    pm.startPoint = {i, j};
-                    pm.endPoint = move;
-                    pm.startPos = pointToPos(pm.startPoint);
-                    pm.endPos = pointToPos(move);
-                    
-                    notes.push_back((pm.pieceT == 'p' ? "" : std::string(1, pm.pieceT)) + pm.startPos + pm.endPos);
-                    pieceMove.push_back(pm);
+            std::pair<int, int> p = {i, j};
+            
+            // Determine piece color
+            if (islower(board[i][j])) isWhitePiece = true;
+            if (isupper(board[i][j])) isWhitePiece = false;
+            
+            if (board[i][j] == 'k') {
+                std::cout << "K" << std::endl;
+            }
 
-//                    notes.push_back(pieceToPosition(board[i][j], {i, j}, move));
-//                    allMovesWithAtoB.push_back({{i, j}, move});
+            // Get legal moves, a loop is a move
+            for (auto& move : pieceLogic(board[i][j], p)) // Return vector of pairs of legal moves
+            {
+                pm.pieceT = board[i][j];
+                pm.startPoint = {i, j};
+                pm.endPoint = move;
+                pm.startPos = pointToPos(pm.startPoint);
+                pm.endPos = pointToPos(move);
+                
+                // White moves
+                if (std::islower(board[i][j])) {
+                    notes_w.push_back((pm.pieceT == 'p' ? "" : std::string(1, pm.pieceT)) + pm.startPos + pm.endPos);
+                    whiteMoves.push_back(pm);
+                }
+                
+                // Black moves
+                if (std::isupper(board[i][j])) {
+                    notes_b.push_back((pm.pieceT == 'P' ? "" : std::string(1, pm.pieceT)) + pm.startPos + pm.endPos);
+                    blackMoves.push_back(pm);
+
                 }
             }
         }
     }
-    processMoves(notes);
-    for (size_t i = 0; i < pieceMove.size(); i++) {
-        pieceMove[i].note = notes[i];
-    }
-}
-
-
-void Chess::printAllPossibleMoves(){
-        
-    for (auto& move: pieceMove){
-        std::cout << move.note << "  ";
+    
+    
+    
+    /// HANDLE UNKNOWN PROBLEMS
+    ///
+    /// SOMETIMES IT RETURNS WITH STRING LENGTH != 4 OR 5, GET RID OF STRINGS LENGTH IS NOT 4 OR 5
+    notes_b.erase( std::remove_if(notes_b.begin(), notes_b.end(),[](const std::string& s)
+                                {return s.length() != 4 && s.length() != 5; }),notes_b.end());
+    
+    notes_w.erase( std::remove_if(notes_w.begin(), notes_w.end(),[](const std::string& s)
+                                {return s.length() != 4 && s.length() != 5; }),notes_w.end());
+    
+    // Simplify notations and store it in Moves
+    processMoves(notes_w);
+    processMoves(notes_b);
+    for (size_t i = 0; i < notes_w.size(); i++) {
+        whiteMoves[i].note = notes_w[i];
     }
     
-    std::cout << "\n";
+    for (size_t i = 0; i < notes_b.size(); i++) {
+        blackMoves[i].note = notes_b[i];
+    }
 }
+
 
 std::vector<std::pair<int, int>> Chess::pieceLogic(char piece, std::pair<int, int>& place){
     std::vector<std::pair<int, int>> allMoveForThisPiece;
     allMoveForThisPiece.clear();
+    piece = tolower(piece);
     switch (piece) {
         case 'k':
         {
@@ -310,16 +346,18 @@ std::vector<std::pair<int, int>> Chess::pieceLogic(char piece, std::pair<int, in
                 {0, -1}, {0, 1}, {-1, 0}, {1, 0}
             };
 
-            for (const auto& offset : kingMoves) {
+            for (auto& offset : kingMoves) {
                 int newX = place.first + offset.first;
                 int newY = place.second + offset.second;
 
                 if (newX >= 0 && newX < 8 && newY >= 0 && newY < 8) {
                     std::pair<int, int> move = {newX, newY};
+                    
+                    // Cannot take own piece && can take enemy piece
                     if (Knight(place, move)) allMoveForThisPiece.push_back(move);
                 }
             }
-        }
+        }break;
         case 'q':
         {
             // Queen == Rook + Bishop
@@ -427,12 +465,12 @@ std::vector<std::pair<int, int>> Chess::pieceLogic(char piece, std::pair<int, in
             // If forward one move is invalid, then no move is possible, return function
             //
             // a9 -> invalid,
-            if (isWhiteTurn && (place.first - 1) < 0) {
+            if (isWhitePiece && (place.first - 1) < 0) {
                 return allMoveForThisPiece;
             }
             
             // a0 -> invalid,
-            if (!isWhiteTurn && (place.first - 1) > 7) {
+            if (!isWhitePiece && (place.first + 1) > 7) {
                 return allMoveForThisPiece;
             }
 
@@ -446,7 +484,7 @@ std::vector<std::pair<int, int>> Chess::pieceLogic(char piece, std::pair<int, in
                     continue;
                 }
                 
-                move = {isWhiteTurn? place.first - 1:place.first + 1, place.second + i};
+                move = {isWhitePiece? place.first - 1:place.first + 1, place.second + i};
                 
                 if (Pawn(place, move)) {
                     allMoveForThisPiece.push_back(move);
@@ -454,14 +492,14 @@ std::vector<std::pair<int, int>> Chess::pieceLogic(char piece, std::pair<int, in
             }
             
             // Long move
-            if (isWhiteTurn && place.first == 6) {
+            if (isWhitePiece && place.first == 6) {
                 move = {4, place.second};
                 if (Pawn(place, move)){
                     allMoveForThisPiece.push_back(move);
                 }
             }
             
-            if (!isWhiteTurn && coordination.first == 1) {
+            if (!isWhitePiece && place.first == 1) {
                 move = {3, place.second};
                 if (Pawn(place, move)) {
                     allMoveForThisPiece.push_back(move);
@@ -479,7 +517,7 @@ std::vector<std::pair<int, int>> Chess::pieceLogic(char piece, std::pair<int, in
 
 void Chess::promotion(std::pair<int, int>& pawnOnFinalRank){
     char pieceToPromoteAs;
-    if (pawnOnFinalRank.first != (isWhiteTurn? 0: 7)) {
+    if (pawnOnFinalRank.first != (isWhitePiece? 0: 7)) {
         // False promotion
     }else{
         // Get user input of desired piece
@@ -497,10 +535,10 @@ void Chess::promotion(std::pair<int, int>& pawnOnFinalRank){
 
 bool Chess::Knight(std::pair<int, int> &pointA, std::pair<int, int> &pointB){
     // Cannot take own piece
-    if (isWhiteTurn ? islower(board[pointB.first][pointB.second]):isupper(board[pointB.first][pointB.second])) return false;
+    if (isWhitePiece ? islower(board[pointB.first][pointB.second]):isupper(board[pointB.first][pointB.second])) return false;
     
     // Can take enemy piece
-    if (isWhiteTurn ? isupper(board[pointB.first][pointB.second]):islower(board[pointB.first][pointB.second])) return true;
+    if (isWhitePiece ? isupper(board[pointB.first][pointB.second]):islower(board[pointB.first][pointB.second])) return true;
     
     return true;
 }
@@ -531,19 +569,16 @@ bool Chess::Bishop(std::pair<int, int> &pointA, std::pair<int, int> &pointB){
     }
     
     // Cannot take own piece
-    if (isWhiteTurn ? islower(board[pointB.first][pointB.second]):isupper(board[pointB.first][pointB.second])) return false;
+    if (isWhitePiece ? islower(board[pointB.first][pointB.second]):isupper(board[pointB.first][pointB.second])) return false;
     
     // Can take enemy piece
-    if (isWhiteTurn ? isupper(board[pointB.first][pointB.second]):islower(board[pointB.first][pointB.second])) return true;
+    if (isWhitePiece ? isupper(board[pointB.first][pointB.second]):islower(board[pointB.first][pointB.second])) return true;
     return true;
 }
 
     
 bool Chess::Rook(std::pair<int, int> &pointA, std::pair<int, int> &pointB){
-    // Cannot take own piece
-    // Cannot move through pieces
-    
-    
+
     
     // No pieces is occupying the way
     int distance;
@@ -552,7 +587,7 @@ bool Chess::Rook(std::pair<int, int> &pointA, std::pair<int, int> &pointB){
     if (pointB.first - pointA.first == 0) distance = pointB.second - pointA.second;
     else distance = pointB.first - pointA.first;
 
-    bool isNegaDist = (distance < 0? true : false);
+    bool isNegaDist = distance < 0;
     distance = abs(distance);
     
     for (int i = 1; i < distance; i++) {
@@ -564,10 +599,10 @@ bool Chess::Rook(std::pair<int, int> &pointA, std::pair<int, int> &pointB){
     }
     
     // Cannot take own piece
-    if (isWhiteTurn ? islower(board[pointB.first][pointB.second]):isupper(board[pointB.first][pointB.second])) return false;
+    if (isWhitePiece ? islower(board[pointB.first][pointB.second]):isupper(board[pointB.first][pointB.second])) return false;
     
     // Can take enemy piece
-    if (isWhiteTurn ? isupper(board[pointB.first][pointB.second]):islower(board[pointB.first][pointB.second])) return true;
+    if (isWhitePiece ? isupper(board[pointB.first][pointB.second]):islower(board[pointB.first][pointB.second])) return true;
     return true;
 }
 
@@ -576,7 +611,7 @@ bool Chess::Pawn(std::pair<int, int>& pointA, std::pair<int, int>& pointB){
     // En passant
     
     // One square move for WHITE
-    if (isWhiteTurn && (pointB.first - pointA.first) == -1) {
+    if (isWhitePiece && (pointB.first - pointA.first) == -1) {
         // Capturing diagonally
         if ((pointB.second - pointA.second == 1 || pointB.second - pointA.second == -1)) {
             // Opponent's piece
@@ -592,7 +627,7 @@ bool Chess::Pawn(std::pair<int, int>& pointA, std::pair<int, int>& pointB){
     }
     
     // One square move for BLACK
-    if (!isWhiteTurn && (pointB.first - pointA.first) == 1) {
+    if (!isWhitePiece && (pointB.first - pointA.first) == 1) {
         // Capturing
         if ((pointB.second - pointA.second == 1 || pointB.second - pointA.second == -1)) {
             // Opponent's piece
@@ -609,15 +644,15 @@ bool Chess::Pawn(std::pair<int, int>& pointA, std::pair<int, int>& pointB){
     
     // Long move
     // If it's a 2 square move...
-    if ((isWhiteTurn && (pointB.first - pointA.first) == -2) || (!isWhiteTurn && (pointB.first - pointA.first) == 2)) {
+    if ((isWhitePiece && (pointB.first - pointA.first) == -2) || (!isWhitePiece && (pointB.first - pointA.first) == 2)) {
         
         // Two blocks ahead are unoccupied and is currently on rank 1 or 6
-        if (isWhiteTurn && board[pointA.first - 1][pointA.second] == '.' &&
+        if (isWhitePiece && board[pointA.first - 1][pointA.second] == '.' &&
             board[pointA.first - 2][pointA.second] == '.' && pointA.first == 6) {
             return true;
         }
         
-        if (!isWhiteTurn && board[pointA.first + 1][pointA.second] == '.' &&
+        if (!isWhitePiece && board[pointA.first + 1][pointA.second] == '.' &&
             board[pointA.first + 2][pointA.second] == '.' && pointA.first == 1) {
             return true;
         }
@@ -626,52 +661,42 @@ bool Chess::Pawn(std::pair<int, int>& pointA, std::pair<int, int>& pointB){
     
 }
 
-//bool Chess::PieceMove(char piece, bool isCapturing){
-//    switch (piece) {
-//        case 'k':
-//            //
-//            break;
-//        case 'q':
-//            //
-//            break;
-//        case 'b':
-//            //
-//            break;
-//        case 'n':
-//            //
-//            break;
-//        case 'r':
-//            //
-//            break;
-//            
-//        default:
-//            break;
-//    }
-//    return false;
-//}
+
+
+///UNCOMPLETED FUNCTIONS
+///
+///
+///
+///
+///
+///
+///TODO: Update notations, e.g. qa2 -> Qa2, user input qa2 or Qa2 should be fine, atCheck() if possible
+///
 
 void Chess::makeMove(std::string& pos){
     
+    std::vector<PieceMove> moves = isWhiteTurn ? whiteMoves : blackMoves;
+    
     // Iterate through pieceMove to get index of pm.note == position
-    auto it = std::find_if(pieceMove.begin(), pieceMove.end(), [&](const struct PieceMove& pm) {return pm.note == pos;});
-    if (it != pieceMove.end()) {
+    auto it = std::find_if(moves.begin(), moves.end(), [&](const struct PieceMove& pm) {return pm.note == pos;});
+    if (it != moves.end()) {
         
         // Get the move's index
-        size_t idx = std::distance(pieceMove.begin(), it);
+        size_t idx = std::distance(moves.begin(), it);
         
         // Promotion of pawn
-        if (pieceMove[idx].pieceT == 'p' && pieceMove[idx].endPoint.first == (isWhiteTurn? 0: 7)) {
-            promotion(pieceMove[idx].endPoint);
+        if (moves[idx].pieceT == 'p' && moves[idx].endPoint.first == (isWhiteTurn? 0: 7)) {
+            promotion(moves[idx].endPoint);
         }
         
         // Noraml piece move
         else{
             // Point B's piece is point A's piece
-            board[pieceMove[idx].endPoint.first][pieceMove[idx].endPoint.second] = board[pieceMove[idx].startPoint.first][pieceMove[idx].startPoint.second];
+            board[moves[idx].endPoint.first][moves[idx].endPoint.second] = board[moves[idx].startPoint.first][moves[idx].startPoint.second];
         }
         
         // Clear point A
-        board[pieceMove[idx].startPoint.first][pieceMove[idx].startPoint.second] = '.';
+        board[moves[idx].startPoint.first][moves[idx].startPoint.second] = '.';
     }
 }
 
@@ -691,15 +716,33 @@ void Chess::newGame(){
         std::cout << "Enter position: ";
         std::cin >> position;
         
-        // If position is in allMove list, then it's legal move
-        if (std::any_of(pieceMove.begin(), pieceMove.end(), [&](const struct PieceMove& pm) {return pm.note == position;})) {
-            // Legal
-            makeMove(position);
-        }else{
-            // Probably illegal
+        // Who's turn
+        if (isWhiteTurn) {
+            // If position is in allMove list, then it's legal move
+            if (std::any_of(whiteMoves.begin(), whiteMoves.end(), [&](const struct PieceMove& pm) {return pm.note == position;})) {
+                // Legal
+                makeMove(position);
+                std::cout << "Move made" << std::endl;
+            }
         }
         
+        // Black's turn
+        else{
+            // If position is in allMove list, then it's legal move
+            if (std::any_of(blackMoves.begin(), blackMoves.end(), [&](const struct PieceMove& pm) {return pm.note == position;})) {
+                // Legal
+                makeMove(position);
+                std::cout << "Move made" << std::endl;
+            }
+        }
+        
+//        else{
+//            // Probably illegal
+//            std::cout << "Illegal move" << std::endl;
+//        }
+        
         printBoard();
+        isWhiteTurn = !isWhiteTurn;
         
     }
 }

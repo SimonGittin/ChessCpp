@@ -52,8 +52,11 @@ class Chess {
     char board[8][8];
     std::string position;
     std::pair<int, int> coordination;
-    std::vector<PieceMove> pieceMove;
+    std::vector<PieceMove> whiteMoves;
+    std::vector<PieceMove> blackMoves;
+
     bool isWhiteTurn = true;
+    bool isWhitePiece = true;
     
     // Init board
     void initializeBoard();
