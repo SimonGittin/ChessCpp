@@ -67,38 +67,26 @@ class Chess {
     // e.g. n = knight
     std::string fullName(char piece);
     
-    // Returns int vec of repeated indices, work with processMoves
+    // Returns int vec of repeated indices, work with processMoves to simplify notations
     std::vector<int> repeatedIndices(const std::vector<std::string>& vec);
-    
     std::vector<std::string> processMoves(std::vector<std::string>& rawMoves);
     
-    // Turn string position into number expressions (e4)=> (4, 4) also return true if it's a pawn move
-    bool toNumberAndIsPawnMove(std::string position, std::pair<int, int>& coordination);
-    
     // Simple coordination to notation function => {2, 3} => d6
-    std::string pointToPos(std::pair<int, int>);
-    // Turn <int, int> coordination into full string position e2e3, qf6f7
-    std::string pieceToPosition(char piece, std::pair<int, int> pointA, std::pair<int, int> pointB);
-    
-    // Check if the move is a capture
-    bool isCapturing(std::pair<int, int>& coordination);
-    
-    // Show legal move
-    void legalMoves(int row, int col);
-    
-    // When is capturing => piece rule, cannot take own piece
-    bool isLegal(std::pair<int, int>& coordination);
+    std::string pointToPos(std::pair<int, int>&);
+
     
     // Check validation when moved from point a to b
+    // Queen == Rook + Bishop
     bool Pawn(std::pair<int, int>& pointA, std::pair<int, int>& pointB);
     bool Rook(std::pair<int, int>& pointA, std::pair<int, int>& pointB);
     bool Bishop(std::pair<int, int>& pointA, std::pair<int, int>& pointB);
-
+    bool Knight(std::pair<int, int>& pointA, std::pair<int, int>& pointB);
+    bool King(std::pair<int, int>& pointA, std::pair<int, int>& pointB);
     
-    // Other pieces move, also check validation
-    bool PieceMove(char piece, bool isCapturing);
+    // Promotion
+    void promotion(std::pair<int, int>&);
     
-    void makeMove(std::string pos);
+    void makeMove(std::string& pos);
     
     // Returns a list of all possible moves for player at that round
     void findAllPossibleMoves();
@@ -106,10 +94,8 @@ class Chess {
     // Read the value
     void printAllPossibleMoves();
     
-    std::vector<std::pair<int, int>> pieceLogic(char piece, std::pair<int, int> place);
-    
-    bool pieceRule(std::pair<int, int> coordination);
-    
+    std::vector<std::pair<int, int>> pieceLogic(char piece, std::pair<int, int>& place);
+        
     // Under check or not
     bool atCheck();
     
@@ -118,8 +104,6 @@ class Chess {
     
     // Draw
     bool isDraw();
-    
-    
     
     // Take turn and record current player
     void takeTurn();
