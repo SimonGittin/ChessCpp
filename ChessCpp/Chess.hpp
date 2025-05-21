@@ -54,6 +54,7 @@ class Chess {
     std::pair<int, int> coordination;
     std::vector<PieceMove> whiteMoves;
     std::vector<PieceMove> blackMoves;
+    std::vector<std::pair<int, int>> tempMoves;
 
     bool isWhiteTurn = true;
     bool isWhitePiece = true;
@@ -80,11 +81,11 @@ class Chess {
     
     // Check validation when moved from point a to b
     // Queen == Rook + Bishop
-    bool Pawn(std::pair<int, int>& pointA, std::pair<int, int>& pointB);
-    bool Rook(std::pair<int, int>& pointA, std::pair<int, int>& pointB);
-    bool Bishop(std::pair<int, int>& pointA, std::pair<int, int>& pointB);
-    bool Knight(std::pair<int, int>& pointA, std::pair<int, int>& pointB);
-    bool King(std::pair<int, int>& pointA, std::pair<int, int>& pointB);
+    bool Pawn(char (&bd)[8][8], std::pair<int, int>& pointA, std::pair<int, int>& pointB);
+    bool Rook(char (&bd)[8][8], std::pair<int, int>& pointA, std::pair<int, int>& pointB);
+    bool Bishop(char (&bd)[8][8], std::pair<int, int>& pointA, std::pair<int, int>& pointB);
+    bool Knight(char (&bd)[8][8], std::pair<int, int>& pointA, std::pair<int, int>& pointB);
+    bool King(char (&bd)[8][8], std::pair<int, int>& pointA, std::pair<int, int>& pointB);
     
     // Promotion
     void promotion(std::pair<int, int>&);
@@ -93,14 +94,14 @@ class Chess {
     
     // Returns a list of all possible moves for player at that round
     void findAllPossibleMoves();
-    
+        
     // Read the value
     void printAllPossibleMoves();
     
-    std::vector<std::pair<int, int>> pieceLogic(char piece, std::pair<int, int>& place);
+    std::vector<std::pair<int, int>> pieceLogic(bool checkNeeded, char (&bd)[8][8], char piece, std::pair<int, int>& place);
         
     // Under check or not
-    bool atCheck();
+    bool atCheck(char piece, std::pair<int, int>& from, std::pair<int, int>& toPoint);
     
     // Checkmate
     bool isWin();

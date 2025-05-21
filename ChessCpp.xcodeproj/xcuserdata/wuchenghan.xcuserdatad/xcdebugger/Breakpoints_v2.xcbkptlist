@@ -14,8 +14,8 @@
             filePath = "ChessCpp/Chess.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "298"
-            endingLineNumber = "298"
+            startingLineNumber = "311"
+            endingLineNumber = "311"
             landmarkName = "Chess::findAllPossibleMoves()"
             landmarkType = "7">
          </BreakpointContent>
@@ -30,22 +30,26 @@
             filePath = "ChessCpp/Chess.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "792"
-            endingLineNumber = "792">
+            startingLineNumber = "838"
+            endingLineNumber = "838"
+            landmarkName = "Chess::newGame()"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "F92A4919-999B-4AB6-9C5C-02030B1101E8"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "ChessCpp/Chess.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "784"
-            endingLineNumber = "784">
+            startingLineNumber = "834"
+            endingLineNumber = "834"
+            landmarkName = "Chess::newGame()"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -58,8 +62,8 @@
             filePath = "ChessCpp/Chess.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "707"
-            endingLineNumber = "707"
+            startingLineNumber = "840"
+            endingLineNumber = "840"
             landmarkName = "Chess::newGame()"
             landmarkType = "7">
          </BreakpointContent>
@@ -74,8 +78,8 @@
             filePath = "ChessCpp/Chess.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "710"
-            endingLineNumber = "710"
+            startingLineNumber = "841"
+            endingLineNumber = "841"
             landmarkName = "Chess::newGame()"
             landmarkType = "7">
          </BreakpointContent>
@@ -90,8 +94,8 @@
             filePath = "ChessCpp/Chess.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "716"
-            endingLineNumber = "716"
+            startingLineNumber = "841"
+            endingLineNumber = "841"
             landmarkName = "Chess::newGame()"
             landmarkType = "7">
          </BreakpointContent>
@@ -106,9 +110,9 @@
             filePath = "ChessCpp/Chess.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "580"
-            endingLineNumber = "580"
-            landmarkName = "Chess::Rook(pointA, pointB)"
+            startingLineNumber = "717"
+            endingLineNumber = "717"
+            landmarkName = "Chess::Pawn(, pointA, pointB)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -122,8 +126,8 @@
             filePath = "ChessCpp/Chess.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "311"
-            endingLineNumber = "311"
+            startingLineNumber = "325"
+            endingLineNumber = "325"
             landmarkName = "Chess::findAllPossibleMoves()"
             landmarkType = "7">
          </BreakpointContent>
@@ -138,9 +142,25 @@
             filePath = "ChessCpp/Chess.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "324"
-            endingLineNumber = "324"
-            landmarkName = "Chess::findAllPossibleMoves()"
+            startingLineNumber = "398"
+            endingLineNumber = "398"
+            landmarkName = "Chess::pieceLogic(checkNeeded, piece, place)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "CAE03744-5084-4507-AC83-D169AE7EA63A"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "ChessCpp/Chess.cpp"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "548"
+            endingLineNumber = "548"
+            landmarkName = "Chess::pieceLogic(checkNeeded, piece, place)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

@@ -10,7 +10,7 @@
 void Chess::initializeBoard(){
     // Fill board with .
     memset(board, '.', sizeof(board));
-    customBoard(0);
+    customBoard(3);
 }
 
 void Chess::customBoard(int option){
@@ -59,8 +59,11 @@ void Chess::customBoard(int option){
             board[4][3] = 'r';
             break;
         case 3:
-            board[1][4] = 'k';
-//            board[0][3] = 'P';
+            board[3][3] = 'Q';
+            board[4][4] = 'p';
+            board[6][6] = 'k';
+            board[2][3] = 'K';
+            board[6][3] = 'r';
         default:
             break;
     }
@@ -75,30 +78,25 @@ void Chess::printBoard(){
     }
 }
 
-//std::string Chess::fullName(char piece){
-//    switch (piece) {
-//        case 'k':
-//            return "king";
-//        case 'q':
-//            return "queen";
-//        case 'b':
-//            return "bishop";
-//        case 'n':
-//            return "knight";
-//        case 'r':
-//            return "rook";
-//        default:
-//            return "pawn";
-//            break;
-//    }
-//    return "";
-//}
 
 void Chess::printAllPossibleMoves(){
     
-    for (auto& move: (isWhiteTurn ? whiteMoves: blackMoves)){
+//    for (auto& move: (isWhiteTurn ? whiteMoves: blackMoves)){
+//        std::cout << move.note << "  ";
+//    }
+    std::cout << "White moves: ";
+    for (auto& move: whiteMoves){
+        std::cout <<  move.note << "  ";
+    }
+    std::cout << "\nBlack moves: ";
+    
+    for (auto& move: blackMoves){
         std::cout << move.note << "  ";
     }
+    
+    
+    
+//    for (auto& i: tempMoves) std::cout << pointToPos(i) << " ";
     
     std::cout << "\n";
 }
@@ -273,20 +271,18 @@ void Chess::findAllPossibleMoves(){
             // A loop a piece
             // White turn, find white pieces
                 
-                // pieceLogic takes the piece type & current place, returns a vector of all possible moves(pair)
-                // A loop a move for a piece
+            // pieceLogic takes the piece type & current place, returns a vector of all possible moves(pair)
+            // A loop a move for a piece
             std::pair<int, int> p = {i, j};
+            
+            if (board[i][j] == '.') continue;
             
             // Determine piece color
             if (islower(board[i][j])) isWhitePiece = true;
             if (isupper(board[i][j])) isWhitePiece = false;
-            
-            if (board[i][j] == 'k') {
-                std::cout << "K" << std::endl;
-            }
 
             // Get legal moves, a loop is a move
-            for (auto& move : pieceLogic(board[i][j], p)) // Return vector of pairs of legal moves
+            for (auto& move : pieceLogic(true, board, board[i][j], p)) // Return vector of pairs of legal moves
             {
                 pm.pieceT = board[i][j];
                 pm.startPoint = {i, j};
@@ -296,7 +292,7 @@ void Chess::findAllPossibleMoves(){
                 
                 // White moves
                 if (std::islower(board[i][j])) {
-                    notes_w.push_back((pm.pieceT == 'p' ? "" : std::string(1, pm.pieceT)) + pm.startPos + pm.endPos);
+                    notes_w.push_back((pm.pieceT == 'p' ? "" : std::string(1,toupper(pm.pieceT))) + pm.startPos + pm.endPos);
                     whiteMoves.push_back(pm);
                 }
                 
@@ -309,6 +305,7 @@ void Chess::findAllPossibleMoves(){
             }
         }
     }
+    
     
     
     
@@ -333,10 +330,70 @@ void Chess::findAllPossibleMoves(){
     }
 }
 
+// Params: current piece (expressed by loswercase), from point to point & isWhitePiece globally
+// atCheck examines EVERY move on board to see if its next move exposes own-side king, regardless of who's turn it is.
+bool Chess::atCheck(char piece, std::pair<int, int>& from, std::pair<int, int>& toPoint){
+    
+    // Clear for every move
+    tempMoves.clear();
+    std::pair<int, int> place;
+    std::pair<int, int> kingPoint;
+    
+    // tempBoard simulates the board AFTER move is made
+    char tempBoard[8][8];
+    memcpy(tempBoard, board, sizeof(tempBoard));
+    
+    // Simulate next move
+    tempBoard[from.first][from.second] = '.';
+    tempBoard[toPoint.first][toPoint.second] = (isWhitePiece ? piece: toupper(piece));
+    
+    // Find the king's position
+    char kingChar = isWhitePiece ? 'k' : 'K';
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 8; j++) {
+            if (tempBoard[i][j] == kingChar) {
+                kingPoint = {i, j};
+                break;
+            }
+        }
+    }
+    
+    // Loop through each block to get opponent's moves
+    for (size_t i = 0; i < 8; i++) {
+        for (size_t j = 0; j < 8; j++) {
+            
+            // If to-be-examined piece is white, find black, also skip empty blocks
+            if (tempBoard[i][j] == '.') continue;
+            if (isWhitePiece && islower(tempBoard[i][j])) continue;
+            if (!isWhitePiece && isupper(tempBoard[i][j])) continue;
+            
+            isWhitePiece = !isWhitePiece;
+            place = {i, j};
+            
+            // If piece is white,
+            // &move is a move of a piece, type std::pair
+            for (auto& move: pieceLogic(false, tempBoard, tempBoard[i][j], place)){
+                
+                // Add the move
+                tempMoves.push_back(move); // tempMoves store every opponent's move without checkNeeded
+            }
+            
+            isWhitePiece = !isWhitePiece;
+        }
+    }
+    
+    // If king point is in one of the moves meaning king is exposed to check
+    if (std::find(tempMoves.begin(), tempMoves.end(), kingPoint) != tempMoves.end()) {
+        return true;
+    }
+    return false;
+}
 
-std::vector<std::pair<int, int>> Chess::pieceLogic(char piece, std::pair<int, int>& place){
+
+std::vector<std::pair<int, int>> Chess::pieceLogic(bool checkNeeded, char (&bd)[8][8], char piece, std::pair<int, int>& place){
     std::vector<std::pair<int, int>> allMoveForThisPiece;
     allMoveForThisPiece.clear();
+    
     piece = tolower(piece);
     switch (piece) {
         case 'k':
@@ -354,7 +411,10 @@ std::vector<std::pair<int, int>> Chess::pieceLogic(char piece, std::pair<int, in
                     std::pair<int, int> move = {newX, newY};
                     
                     // Cannot take own piece && can take enemy piece
-                    if (Knight(place, move)) allMoveForThisPiece.push_back(move);
+                    if (Knight(bd, place, move)){
+                        allMoveForThisPiece.push_back(move);
+                        if (checkNeeded){ if (atCheck(piece, place, move)) allMoveForThisPiece.pop_back();};
+                    }
                 }
             }
         }break;
@@ -369,13 +429,19 @@ std::vector<std::pair<int, int>> Chess::pieceLogic(char piece, std::pair<int, in
                 // LT to RB
                 if (place.first + i >= 0 && place.first + i <=7 && place.second + i >= 0 && place.second + i <=7) {
                     move = {place.first + i, place.second + i};
-                    if (Bishop(place, move)) allMoveForThisPiece.push_back(move);
+                    if (Bishop(bd, place, move)){
+                        allMoveForThisPiece.push_back(move);
+                        if (checkNeeded){ if (atCheck(piece, place, move)) allMoveForThisPiece.pop_back();};
+                    }
                 }
                 
                 // LB to RT
                 if (place.first - i >= 0 && place.first - i <=7 && place.second + i >= 0 && place.second + i <=7) {
                     move = {place.first - i, place.second + i};
-                    if (Bishop(place, move)) allMoveForThisPiece.push_back(move);
+                    if (Bishop(bd, place, move)){
+                        allMoveForThisPiece.push_back(move);
+                        if (checkNeeded){ if (atCheck(piece, place, move)) allMoveForThisPiece.pop_back();};
+                    }
                 }
             }
             
@@ -386,13 +452,19 @@ std::vector<std::pair<int, int>> Chess::pieceLogic(char piece, std::pair<int, in
                 // All move on row
                 if (place.first + i >= 0 && place.first + i <=7) {
                     move = {place.first + i, place.second};
-                    if (Rook(place, move)) allMoveForThisPiece.push_back(move);
+                    if (Rook(bd, place, move)){
+                        allMoveForThisPiece.push_back(move);
+                        if (checkNeeded){ if (atCheck(piece, place, move)) allMoveForThisPiece.pop_back();};
+                    }
                 }
                 
                 // All move on col
                 if (place.second + i >= 0 && place.second + i <=7) {
                     move = {place.first, place.second + i};
-                    if(Rook(place, move)) allMoveForThisPiece.push_back(move);
+                    if(Rook(bd, place, move)){
+                        allMoveForThisPiece.push_back(move);
+                        if (checkNeeded){ if (atCheck(piece, place, move)) allMoveForThisPiece.pop_back();};
+                    }
                 }
             }
         }
@@ -407,13 +479,19 @@ std::vector<std::pair<int, int>> Chess::pieceLogic(char piece, std::pair<int, in
                 // LT to RB
                 if (place.first + i >= 0 && place.first + i <=7 && place.second + i >= 0 && place.second + i <=7) {
                     move = {place.first + i, place.second + i};
-                    if (Bishop(place, move)) allMoveForThisPiece.push_back(move);
+                    if (Bishop(bd, place, move)){
+                        allMoveForThisPiece.push_back(move);
+                        if (checkNeeded){ if (atCheck(piece, place, move)) allMoveForThisPiece.pop_back();};
+                    }
                 }
                 
                 // LB to RT
                 if (place.first - i >= 0 && place.first - i <=7 && place.second + i >= 0 && place.second + i <=7) {
                     move = {place.first - i, place.second + i};
-                    if (Bishop(place, move)) allMoveForThisPiece.push_back(move);
+                    if (Bishop(bd, place, move)){
+                        allMoveForThisPiece.push_back(move);
+                        if (checkNeeded){ if (atCheck(piece, place, move)) allMoveForThisPiece.pop_back();};
+                    }
                 }
             }
             break;
@@ -431,7 +509,10 @@ std::vector<std::pair<int, int>> Chess::pieceLogic(char piece, std::pair<int, in
 
                 if (newX >= 0 && newX < 8 && newY >= 0 && newY < 8) {
                     std::pair<int, int> move = {newX, newY};
-                    if (Knight(place, move)) allMoveForThisPiece.push_back(move);
+                    if (Knight(bd, place, move)){
+                        allMoveForThisPiece.push_back(move);
+                        if (checkNeeded){ if (atCheck(piece, place, move)) allMoveForThisPiece.pop_back();};
+                    }
                 }
             }
             break;
@@ -447,13 +528,19 @@ std::vector<std::pair<int, int>> Chess::pieceLogic(char piece, std::pair<int, in
                 // All move on row
                 if (place.first + i >= 0 && place.first + i <=7) {
                     move = {place.first + i, place.second};
-                    if (Rook(place, move)) allMoveForThisPiece.push_back(move);
+                    if (Rook(bd, place, move)){
+                        allMoveForThisPiece.push_back(move);
+                        if (checkNeeded){ if (atCheck(piece, place, move)) allMoveForThisPiece.pop_back();};
+                    }
                 }
                 
                 // All move on col
                 if (place.second + i >= 0 && place.second + i <=7) {
                     move = {place.first, place.second + i};
-                    if(Rook(place, move)) allMoveForThisPiece.push_back(move);
+                    if(Rook(bd, place, move)) {
+                        allMoveForThisPiece.push_back(move);
+                        if (checkNeeded){ if (atCheck(piece, place, move)) allMoveForThisPiece.pop_back();};
+                    }
                 }
             }
             break;
@@ -480,30 +567,35 @@ std::vector<std::pair<int, int>> Chess::pieceLogic(char piece, std::pair<int, in
             for (int i = -1; i <= 1; i++) {
                 
                 // Too left or too right -> invalid
-                if (place.second + i < 0 || coordination.second + i > 7) {
+                if (place.second + i < 0 || place.second + i > 7) {
                     continue;
                 }
                 
                 move = {isWhitePiece? place.first - 1:place.first + 1, place.second + i};
                 
-                if (Pawn(place, move)) {
+                if (Pawn(bd, place, move)) {
                     allMoveForThisPiece.push_back(move);
+                    if (checkNeeded){ if (atCheck(piece, place, move)) allMoveForThisPiece.pop_back();};
                 }
             }
             
             // Long move
             if (isWhitePiece && place.first == 6) {
                 move = {4, place.second};
-                if (Pawn(place, move)){
+                if (Pawn(bd, place, move)){
                     allMoveForThisPiece.push_back(move);
+                    if (checkNeeded){ if (atCheck(piece, place, move)) allMoveForThisPiece.pop_back();};
                 }
+
             }
             
             if (!isWhitePiece && place.first == 1) {
                 move = {3, place.second};
-                if (Pawn(place, move)) {
+                if (Pawn(bd, place, move)) {
                     allMoveForThisPiece.push_back(move);
+                    if (checkNeeded){ if (atCheck(piece, place, move)) allMoveForThisPiece.pop_back();};
                 }
+                
             }
             break;
         }
@@ -533,17 +625,17 @@ void Chess::promotion(std::pair<int, int>& pawnOnFinalRank){
     }
 }
 
-bool Chess::Knight(std::pair<int, int> &pointA, std::pair<int, int> &pointB){
+bool Chess::Knight(char (&bd)[8][8], std::pair<int, int> &pointA, std::pair<int, int> &pointB){
     // Cannot take own piece
-    if (isWhitePiece ? islower(board[pointB.first][pointB.second]):isupper(board[pointB.first][pointB.second])) return false;
+    if (isWhitePiece ? islower(bd[pointB.first][pointB.second]):isupper(bd[pointB.first][pointB.second])) return false;
     
     // Can take enemy piece
-    if (isWhitePiece ? isupper(board[pointB.first][pointB.second]):islower(board[pointB.first][pointB.second])) return true;
+    if (isWhitePiece ? isupper(bd[pointB.first][pointB.second]):islower(bd[pointB.first][pointB.second])) return true;
     
     return true;
 }
 
-bool Chess::Bishop(std::pair<int, int> &pointA, std::pair<int, int> &pointB){
+bool Chess::Bishop(char (&bd)[8][8], std::pair<int, int> &pointA, std::pair<int, int> &pointB){
     // Cannot take own piece
     // Cannot move through pieces
     
@@ -563,21 +655,25 @@ bool Chess::Bishop(std::pair<int, int> &pointA, std::pair<int, int> &pointB){
     
     
     for (int i = 1; i < disX; i++) {
-        if (board[pointA.first + (isNegaDists.first? -i: i)][pointA.second + (isNegaDists.second? -i: i)] != '.') {
+        if (bd[pointA.first + (isNegaDists.first? -i: i)][pointA.second + (isNegaDists.second? -i: i)] != '.') {
             return false;
         }
     }
     
+    
     // Cannot take own piece
-    if (isWhitePiece ? islower(board[pointB.first][pointB.second]):isupper(board[pointB.first][pointB.second])) return false;
+    if (isWhitePiece ? islower(bd[pointB.first][pointB.second]):isupper(bd[pointB.first][pointB.second])){
+        std::cout << "Take" << std::endl;
+        return false;
+    }
     
     // Can take enemy piece
-    if (isWhitePiece ? isupper(board[pointB.first][pointB.second]):islower(board[pointB.first][pointB.second])) return true;
+    if (isWhitePiece ? isupper(bd[pointB.first][pointB.second]):islower(bd[pointB.first][pointB.second])) return true;
     return true;
 }
 
     
-bool Chess::Rook(std::pair<int, int> &pointA, std::pair<int, int> &pointB){
+bool Chess::Rook(char (&bd)[8][8], std::pair<int, int> &pointA, std::pair<int, int> &pointB){
 
     
     // No pieces is occupying the way
@@ -592,21 +688,21 @@ bool Chess::Rook(std::pair<int, int> &pointA, std::pair<int, int> &pointB){
     
     for (int i = 1; i < distance; i++) {
         if (isSameRow) {
-            if (board[pointA.first][pointA.second + (!isNegaDist? i : -i)] != '.') return false;
+            if (bd[pointA.first][pointA.second + (!isNegaDist? i : -i)] != '.') return false;
         }else{
-            if (board[pointA.first + (!isNegaDist? i : -i)][pointA.second] != '.') return false;
+            if (bd[pointA.first + (!isNegaDist? i : -i)][pointA.second] != '.') return false;
         }
     }
     
     // Cannot take own piece
-    if (isWhitePiece ? islower(board[pointB.first][pointB.second]):isupper(board[pointB.first][pointB.second])) return false;
+    if (isWhitePiece ? islower(bd[pointB.first][pointB.second]):isupper(bd[pointB.first][pointB.second])) return false;
     
     // Can take enemy piece
-    if (isWhitePiece ? isupper(board[pointB.first][pointB.second]):islower(board[pointB.first][pointB.second])) return true;
+    if (isWhitePiece ? isupper(bd[pointB.first][pointB.second]):islower(bd[pointB.first][pointB.second])) return true;
     return true;
 }
 
-bool Chess::Pawn(std::pair<int, int>& pointA, std::pair<int, int>& pointB){
+bool Chess::Pawn(char (&bd)[8][8], std::pair<int, int>& pointA, std::pair<int, int>& pointB){
     // If pawn is on row 2 or 7, it can launch move with 2 blocks
     // En passant
     
@@ -621,7 +717,7 @@ bool Chess::Pawn(std::pair<int, int>& pointA, std::pair<int, int>& pointB){
         }
         
         // Forward move and not capturing
-        if (pointB.second == pointA.second && board[pointB.first][pointB.second] == '.') {
+        if (pointB.second == pointA.second && bd[pointB.first][pointB.second] == '.') {
             return true;
         }
     }
@@ -631,13 +727,13 @@ bool Chess::Pawn(std::pair<int, int>& pointA, std::pair<int, int>& pointB){
         // Capturing
         if ((pointB.second - pointA.second == 1 || pointB.second - pointA.second == -1)) {
             // Opponent's piece
-            if (std::string("kqrnbp").find(board[pointB.first][pointB.second]) != std::string::npos) {
+            if (std::string("kqrnbp").find(bd[pointB.first][pointB.second]) != std::string::npos) {
                 return true;
             }
         }
         
         // Forward move and not capturing
-        if (pointB.second == pointA.second && board[pointB.first][pointB.second] == '.') {
+        if (pointB.second == pointA.second && bd[pointB.first][pointB.second] == '.') {
             return true;
         }
     }
@@ -647,13 +743,13 @@ bool Chess::Pawn(std::pair<int, int>& pointA, std::pair<int, int>& pointB){
     if ((isWhitePiece && (pointB.first - pointA.first) == -2) || (!isWhitePiece && (pointB.first - pointA.first) == 2)) {
         
         // Two blocks ahead are unoccupied and is currently on rank 1 or 6
-        if (isWhitePiece && board[pointA.first - 1][pointA.second] == '.' &&
-            board[pointA.first - 2][pointA.second] == '.' && pointA.first == 6) {
+        if (isWhitePiece && bd[pointA.first - 1][pointA.second] == '.' &&
+            bd[pointA.first - 2][pointA.second] == '.' && pointA.first == 6) {
             return true;
         }
         
-        if (!isWhitePiece && board[pointA.first + 1][pointA.second] == '.' &&
-            board[pointA.first + 2][pointA.second] == '.' && pointA.first == 1) {
+        if (!isWhitePiece && bd[pointA.first + 1][pointA.second] == '.' &&
+            bd[pointA.first + 2][pointA.second] == '.' && pointA.first == 1) {
             return true;
         }
     }
@@ -723,7 +819,7 @@ void Chess::newGame(){
                 // Legal
                 makeMove(position);
                 std::cout << "Move made" << std::endl;
-            }
+            }else continue;
         }
         
         // Black's turn
@@ -733,13 +829,10 @@ void Chess::newGame(){
                 // Legal
                 makeMove(position);
                 std::cout << "Move made" << std::endl;
-            }
+            }else continue;
         }
         
-//        else{
-//            // Probably illegal
-//            std::cout << "Illegal move" << std::endl;
-//        }
+//        if (atCheck()) std::cout << "Check" << std::endl;
         
         printBoard();
         isWhiteTurn = !isWhiteTurn;
