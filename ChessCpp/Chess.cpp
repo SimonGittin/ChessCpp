@@ -59,11 +59,15 @@ void Chess::customBoard(int option){
             board[4][3] = 'r';
             break;
         case 3:
-            board[3][3] = 'Q';
-            board[4][4] = 'p';
-            board[6][6] = 'k';
-            board[2][3] = 'K';
-            board[6][3] = 'r';
+            board[6][0] = 'Q';
+//            board[4][4] = 'p';
+            board[7][5] = 'k';
+            board[5][5] = 'K';
+//            board[6][3] = 'r';
+            break;
+        case 4:
+            
+            break;
         default:
             break;
     }
@@ -81,9 +85,6 @@ void Chess::printBoard(){
 
 void Chess::printAllPossibleMoves(){
     
-//    for (auto& move: (isWhiteTurn ? whiteMoves: blackMoves)){
-//        std::cout << move.note << "  ";
-//    }
     std::cout << "White moves: ";
     for (auto& move: whiteMoves){
         std::cout <<  move.note << "  ";
@@ -93,152 +94,7 @@ void Chess::printAllPossibleMoves(){
     for (auto& move: blackMoves){
         std::cout << move.note << "  ";
     }
-    
-    
-    
-//    for (auto& i: tempMoves) std::cout << pointToPos(i) << " ";
-    
     std::cout << "\n";
-}
-
-std::vector<int> Chess::repeatedIndices(const std::vector<std::string>& vec){
-    // Store indices for each string
-    std::unordered_map<std::string, std::vector<int>> indexMap;
-    std::vector<int> result;
-    for (int i = 0; i < vec.size(); ++i) {
-        indexMap[vec[i]].push_back(i);
-    }
-
-    // Add indices that have more than one occurrence
-    for (const auto& pair : indexMap) {
-        if (pair.second.size() > 1) {
-            result.insert(result.end(), pair.second.begin(), pair.second.end());
-        }
-    } return result;
-}
-
-std::vector<std::string> Chess::processMoves(std::vector<std::string>& rawMoves) {
-    
-    // Inputs are vectors of length of 4 or 5 sized string,
-    // 4 sized => pawn, 5 sized => other piece move
-    // It's a structure of [piece][point a][point b] e.g. e3e4, qg4g5
-    //
-    // 1. Store it into [piece][point b] form => e.g. e4, qg5
-    // 2. Check if any repetition happens => e.g. qg4g5 & qg6g5 CAUSE REPETITION => qg5
-    // 3. For pawns, if repeated, simply add point A column on it. e.g. [point a col][point b] ab3 & cb3
-    // 4. For others, try [piece][point a col][point b] & [piece][point a row][point b] and store it in 2 string vectors
-    // 5. Returns other 2 bool vectors if repetition happens after revision => {false, false, true,....}
-    // 6. In 2 bool vecs, cross validation => 00 == unique, 01 == same row, 10 same column, 11 == same row & col (same piece > 2)
-    // 7. Store it in final container then return
-    
-    std::vector<std::string> condensedMoves;
-    
-    std::vector<std::string> pieceResolvedCol;
-    std::vector<std::string> pieceResolvedRow;
-    std::vector<bool> rowChecker(rawMoves.size(), false);
-    std::vector<bool> colChecker(rawMoves.size(), false);
-    
-    std::vector<std::string> finalMoves;
-
-    std::vector<int> repetitionIndices;
-    
-    // 1. Store condensed moves and check the repetition
-    for(auto& rawMove : rawMoves){
-        if (rawMove.size() > 2) {
-            if (rawMove.size() == 4) condensedMoves.push_back(rawMove.substr(rawMove.size() - 2));
-            if (rawMove.size() == 5) condensedMoves.push_back(rawMove[0] + rawMove.substr(rawMove.size() - 2));
-        }
-        // 2. Return int vec of repeated items' indices
-        repetitionIndices = repeatedIndices(condensedMoves);
-    }
-    
-    for (int i = 0; i < rawMoves.size(); ++i) {
-        // 3. Pawn
-        // If repeated
-        if (rawMoves[i].size() == 4) {
-            if (find(repetitionIndices.begin(), repetitionIndices.end(), i) != repetitionIndices.end()) {
-                std::string combined;
-                combined.push_back(rawMoves[i][0]); // [point a col]
-                combined+=condensedMoves[i]; // [point b]
-                pieceResolvedCol.push_back(combined);
-                pieceResolvedRow.push_back(combined);
-            }
-            // If unique
-            else{
-                pieceResolvedCol.push_back(condensedMoves[i]); // [point b]
-                pieceResolvedRow.push_back(condensedMoves[i]);
-            }
-        }
-        
-        // 4. Other piece
-        // If repeated
-        if (rawMoves[i].size() == 5) {
-            
-            // Store in container A & B, and cross check
-            if (find(repetitionIndices.begin(), repetitionIndices.end(), i) != repetitionIndices.end()) {
-                
-                // Same row
-                std::string combined;
-                combined.push_back(rawMoves[i][0]); // [piece]
-                combined.push_back(rawMoves[i][1]); // [point a col]
-                combined+=condensedMoves[i][1]; // [point b col]
-                combined+=condensedMoves[i][2]; // [point b row]
-                pieceResolvedCol.push_back(combined); // => [piece][point a col][point b]
-                
-                // Same col
-                combined[1] = rawMoves[i][2]; // Change [point a col] to [point a row]
-                pieceResolvedRow.push_back(combined);
-                
-            }
-            // If unique
-            else{
-                std::string combined;
-                combined.push_back(rawMoves[i][0]); // [piece]
-                combined+=condensedMoves[i][1]; // [point b col]
-                combined+=condensedMoves[i][2]; // [point b row]
-                pieceResolvedCol.push_back(combined); // [piece][point b]
-                pieceResolvedRow.push_back(combined);
-            }
-        }
-    }
-    
-    // 5. Level 2 repetition check, store repetitions as TRUE into bool vecs
-    for (int i = 0; i < 2; i++) {
-        // Clean for second use
-        repetitionIndices.clear();
-        
-        if(i == 0) repetitionIndices = repeatedIndices(pieceResolvedCol);
-        if(i == 1) repetitionIndices = repeatedIndices(pieceResolvedRow);
-        
-        // If repetition exists, change to TRUE for that spot
-        if (!repetitionIndices.empty()) {
-            for (auto& j: repetitionIndices){
-                if(i == 0) colChecker[j] = true;
-                if(i == 1) rowChecker[j] = true;
-            }
-        }
-    }
-    
-    // 6. Cross validation
-    for (int i = 0; i < rawMoves.size(); i++) {
-        
-        // Unique: Ke3e4 => Ke4
-        if (!rowChecker[i] && !colChecker[i]) finalMoves.push_back(pieceResolvedCol[i]);
-        
-        // Same row: Qa2b3 & Qc2b3 => Qab3 & Qcb3
-        if (rowChecker[i] && !colChecker[i]) finalMoves.push_back(pieceResolvedCol[i]);
-        
-        // Same col: Qa2b3 & Qa4b3 => Q2b3 & Q4b3
-        if (!rowChecker[i] && colChecker[i]) finalMoves.push_back(pieceResolvedRow[i]);
-        
-        // All same: Qf7f6 & Qg7f6 & Qg6f6 => Qff6 & Qg7f6 & Q6f6
-        if (rowChecker[i] && colChecker[i]) finalMoves.push_back(rawMoves[i]);
-    }
-//    for (int i = 0; i < rawMoves.size(); i++){
-//        rawMoves[i] = finalMoves[i];
-//    }
-    rawMoves = finalMoves;
-    return finalMoves;
 }
 
 
@@ -319,8 +175,8 @@ void Chess::findAllPossibleMoves(){
                                 {return s.length() != 4 && s.length() != 5; }),notes_w.end());
     
     // Simplify notations and store it in Moves
-    processMoves(notes_w);
-    processMoves(notes_b);
+    qfc::processMoves(notes_w);
+    qfc::processMoves(notes_b);
     for (size_t i = 0; i < notes_w.size(); i++) {
         whiteMoves[i].note = notes_w[i];
     }
@@ -349,14 +205,7 @@ bool Chess::atCheck(char piece, std::pair<int, int>& from, std::pair<int, int>& 
     
     // Find the king's position
     char kingChar = isWhitePiece ? 'k' : 'K';
-    for (int i = 0; i < 8; i++) {
-        for (int j = 0; j < 8; j++) {
-            if (tempBoard[i][j] == kingChar) {
-                kingPoint = {i, j};
-                break;
-            }
-        }
-    }
+    qfc::findKing(kingPoint, tempBoard, kingChar);
     
     // Loop through each block to get opponent's moves
     for (size_t i = 0; i < 8; i++) {
@@ -662,10 +511,8 @@ bool Chess::Bishop(char (&bd)[8][8], std::pair<int, int> &pointA, std::pair<int,
     
     
     // Cannot take own piece
-    if (isWhitePiece ? islower(bd[pointB.first][pointB.second]):isupper(bd[pointB.first][pointB.second])){
-        std::cout << "Take" << std::endl;
-        return false;
-    }
+    if (isWhitePiece ? islower(bd[pointB.first][pointB.second]):isupper(bd[pointB.first][pointB.second])) return false;
+
     
     // Can take enemy piece
     if (isWhitePiece ? isupper(bd[pointB.first][pointB.second]):islower(bd[pointB.first][pointB.second])) return true;
@@ -757,18 +604,6 @@ bool Chess::Pawn(char (&bd)[8][8], std::pair<int, int>& pointA, std::pair<int, i
     
 }
 
-
-
-///UNCOMPLETED FUNCTIONS
-///
-///
-///
-///
-///
-///
-///TODO: Update notations, e.g. qa2 -> Qa2, user input qa2 or Qa2 should be fine, atCheck() if possible
-///
-
 void Chess::makeMove(std::string& pos){
     
     std::vector<PieceMove> moves = isWhiteTurn ? whiteMoves : blackMoves;
@@ -797,6 +632,49 @@ void Chess::makeMove(std::string& pos){
 }
 
 
+bool Chess::isGameEnded(){
+    
+    std::pair<int, int> kPoint;
+    
+    char kingChar = (isWhiteTurn ? 'k':'K');
+    
+    // Find the king's position
+//    for (int i = 0; i < 8; i++) {
+//        for (int j = 0; j < 8; j++) {
+//            if (board[i][j] == ) {
+//                kPoint = {i, j};
+//                break;
+//            }
+//        }
+//    }
+    
+    qfc::findKing(kPoint, board, kingChar);
+        
+    // During white's turn, if whiteMove has size of 0, it must be a stalemate or a checkmate by black
+    if (isWhiteTurn && whiteMoves.size() == 0) {
+        
+        // If any of black's move's .endPoint has king's position, it's checkmate, else stalemate
+        if (std::any_of(blackMoves.begin(), blackMoves.end(), [&](const struct PieceMove& pm) {return pm.endPoint == kPoint;})) {
+            std::cout << "Checkmate by black!" << std::endl;
+            return true;
+        }else{
+            std::cout << "Stalemate" << std::endl;
+            return true;
+        }
+    }
+    if (!isWhiteTurn && blackMoves.size() == 0){
+        if (std::any_of(whiteMoves.begin(), whiteMoves.end(), [&](const struct PieceMove& pm) {return pm.endPoint == kPoint;})) {
+            std::cout << "Checkmate by white!" << std::endl;
+            return true;
+        }else{
+            std::cout << "Stalemate" << std::endl;
+            return true;
+        }
+    }
+    return false;
+}
+
+
 void Chess::newGame(){
     
     std::cout << "Game starts!"<< std::endl;
@@ -808,6 +686,11 @@ void Chess::newGame(){
         findAllPossibleMoves(); // Return vector of positions
         printAllPossibleMoves();
 //        std::cout << pieceMove.size() << std::endl;
+        
+        if (isGameEnded()) {
+            return;
+        }
+        
         // Get input position
         std::cout << "Enter position: ";
         std::cin >> position;
@@ -832,9 +715,11 @@ void Chess::newGame(){
             }else continue;
         }
         
-//        if (atCheck()) std::cout << "Check" << std::endl;
         
         printBoard();
+        
+        
+        
         isWhiteTurn = !isWhiteTurn;
         
     }

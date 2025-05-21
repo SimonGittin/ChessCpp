@@ -16,8 +16,9 @@
 #include <algorithm>
 #include <unordered_map>
 #include <utility>
+#include "qfc.hpp"
 
-#endif /* Chess_hpp */
+
 
 
 // pawn move forward a step, takes pieces diagonally
@@ -68,13 +69,6 @@ class Chess {
     // Option opening or piece placement (for testing)
     void customBoard(int option = 0);
     
-    // e.g. n = knight
-    std::string fullName(char piece);
-    
-    // Returns int vec of repeated indices, work with processMoves to simplify notations
-    std::vector<int> repeatedIndices(const std::vector<std::string>& vec);
-    std::vector<std::string> processMoves(std::vector<std::string>& rawMoves);
-    
     // Simple coordination to notation function => {2, 3} => d6
     std::string pointToPos(std::pair<int, int>&);
 
@@ -103,14 +97,10 @@ class Chess {
     // Under check or not
     bool atCheck(char piece, std::pair<int, int>& from, std::pair<int, int>& toPoint);
     
-    // Checkmate
-    bool isWin();
+    // Checkmate and stalemates
+    bool isGameEnded();
+
     
-    // Draw
-    bool isDraw();
-    
-    // Take turn and record current player
-    void takeTurn();
 public:
     // Start game
     void newGame();
@@ -120,3 +110,4 @@ public:
 };
 
 
+#endif /* Chess_hpp */

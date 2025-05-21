@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include "Chess.hpp"
+#include "qfc.hpp"
 
 
 
