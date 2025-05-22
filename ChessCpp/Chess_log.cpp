@@ -5,7 +5,6 @@
 //  Created by 吳承翰 on 5/22/25.
 //
 
-#pragma once
 #include "Chess.hpp"
 
 // print functions
@@ -31,4 +30,28 @@ void Chess::printAllPossibleMoves(){
         std::cout << move.note << "  ";
     }
     std::cout << "\n";
+}
+
+
+void Chess::printSpecialMoves(){
+    
+    std::cout << "Size: " << specialMoves.size() << std::endl;
+    for (auto& move : specialMoves) {
+//        std::cout << "A move from " << move.startPos << " to " << move.endPos << std::endl;
+        std::cout << "Move: " << move.note << std::endl;
+    }
+}
+
+void Chess::printTempMoves(char (&bd)[8][8]){
+    std::cout << "print" << std::endl;
+    for (int i = 0; i < 8; ++i) {
+        for (int j = 0; j < 8; ++j) {
+            std::cout << bd[i][j] << " ";
+        }
+        std::cout << '\n';
+        
+        for (auto& move: tempMoves) {
+            std::cout << pointToPos(move) << std::endl;
+        }
+    }
 }

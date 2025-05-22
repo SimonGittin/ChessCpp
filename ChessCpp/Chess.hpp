@@ -70,8 +70,8 @@ class Chess {
     // Chess_log.cpp
     void printBoard();
     void printAllPossibleMoves();
-
-    
+    void printSpecialMoves();
+    void printTempMoves(char(&bd)[8][8]);
     
     
     
@@ -91,7 +91,7 @@ class Chess {
     bool pawnCheck(char (&bd)[8][8], std::pair<int, int>& pointA, std::pair<int, int>& pointB);
     // Promotion
     void promotion(std::pair<int, int>&);
-    bool EnPassant(char (&bd)[8][8], std::pair<int, int>& pointA, std::pair<int, int> pointB);
+   void EnPassant(char (&bd)[8][8], std::pair<int, int>& pointA, std::pair<int, int> pointB);
 
     // Chess_status.cpp
     // Init
@@ -104,7 +104,8 @@ class Chess {
     // Make a move
     void makeMove(std::string& pos);
 
-    
+    // Make en passant
+    void makeEnPassant(std::string& pos);
     
     
     

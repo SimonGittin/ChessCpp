@@ -5,7 +5,6 @@
 //  Created by 吳承翰 on 5/22/25.
 //
 
-#pragma once
 #include "Chess.hpp"
 
 
@@ -17,6 +16,7 @@ void Chess::initializeBoard(){
 
 void Chess::initTurn(){
     canEnPassant = false;
+    specialMoves.clear();
 }
 
 bool Chess::isGameEnded(){
@@ -55,6 +55,8 @@ void Chess::makeMove(std::string& pos){
     
     std::vector<PieceMove> moves = isWhiteTurn ? whiteMoves : blackMoves;
     
+    
+    
     // Iterate through pieceMove to get index of pm.note == position
     auto it = std::find_if(moves.begin(), moves.end(), [&](const struct PieceMove& pm) {return pm.note == pos;});
     if (it != moves.end()) {
@@ -62,19 +64,35 @@ void Chess::makeMove(std::string& pos){
         // Get the move's index
         size_t idx = std::distance(moves.begin(), it);
         
+        
+        
         // Promotion of pawn
-        if (moves[idx].pieceT == 'p' && moves[idx].endPoint.first == (isWhiteTurn? 0: 7)) {
+        if (moves[idx].pieceT == (isWhiteTurn ? 'p': 'P') && moves[idx].endPoint.first == (isWhiteTurn? 0: 7)) {
             promotion(moves[idx].endPoint);
         }
+//        else if (moves[idx].pieceT == 'p' && moves[idx].endPoint.first == (isWhiteTurn? 0: 7)) {
+//            promotion(moves[idx].endPoint);
+//        }
         
-        // Noraml piece move
+        // Normal piece move
         else{
             // Point B's piece is point A's piece
             board[moves[idx].endPoint.first][moves[idx].endPoint.second] = board[moves[idx].startPoint.first][moves[idx].startPoint.second];
         }
-        
+                
         // Clear point A
         board[moves[idx].startPoint.first][moves[idx].startPoint.second] = '.';
+        
+        // En passant
+        if
+        (canEnPassant && std::any_of(moves.begin(), moves.end(), [&](const struct PieceMove& pm) {return pm.note == pos;}))
+        {
+            std::cout << moves[idx].startPos << "     " << moves[idx].endPos << std::endl;
+            board[moves[idx].startPoint.first][moves[idx].endPoint.second] = '.';
+            canEnPassant = false;
+            return;
+        }
+        
         
         // track long move, white moves from rank 2 to 4
         if (isWhiteTurn && moves[idx].startPoint.first == 6 && moves[idx].endPoint.first == 4) {
@@ -88,19 +106,42 @@ void Chess::makeMove(std::string& pos){
                 
                 // If left or right side has black pawn, En passant func
                 if (board[point.first][point.second] == 'P') {
-                    std::cout << "En passant possible" << std:: endl;
                     canEnPassant = true;
                     
                     // Takes opponent's pawn start and end point
                     EnPassant(board, point, {point.first, point.second - i});
                 }
             }
-            
         }
         
         // black moves from rank 7 to 5
         if (!isWhiteTurn && moves[idx].startPoint.first == 1 && moves[idx].endPoint.first == 3) {
-            std::cout << "Black made long move " << moves[idx].endPos << std::endl;
+            for (int i = -1; i <= 1; i+=2) {
+                
+                // Long moved black pawn point
+                std::pair<int, int> point = moves[idx].endPoint;
+                point.second += i;
+                
+                // If left or right side has black pawn, En passant func
+                if (board[point.first][point.second] == 'p') {
+                    canEnPassant = true;
+                    
+                    // Takes opponent's pawn start and end point
+                    EnPassant(board, point, {point.first, point.second - i});
+                }
+            }
         }
     }
+}
+
+
+void Chess::makeEnPassant(std::string &pos)
+{
+    if (isWhiteTurn)
+    if(std::any_of(whiteMoves.begin(), whiteMoves.end(), [&](const struct PieceMove& pm) {return pm.note == position;}))
+    {
+        
+    }
+    
+    
 }

@@ -4,7 +4,6 @@
 //
 //  Created by 吳承翰 on 5/22/25.
 //
-#pragma once
 #include "Chess.hpp"
 
 
@@ -205,7 +204,7 @@ void Chess::pawn
 
     std::pair<int, int> move;
 
-    // One square moves
+    // One square moves (3 moves in total)
     for (int i = -1; i <= 1; i++) {
         
         // Too left or too right -> invalid
@@ -249,7 +248,7 @@ bool Chess::pawnCheck(char (&bd)[8][8], std::pair<int, int>& pointA, std::pair<i
         // Capturing diagonally
         if ((pointB.second - pointA.second == 1 || pointB.second - pointA.second == -1)) {
             // Opponent's piece
-            if (std::string("KQRNBP").find(board[pointB.first][pointB.second]) != std::string::npos) {
+            if (std::string("KQRNBP").find(bd[pointB.first][pointB.second]) != std::string::npos) {
                 return true;
             }
         }
@@ -298,16 +297,17 @@ bool Chess::pawnCheck(char (&bd)[8][8], std::pair<int, int>& pointA, std::pair<i
 // Handle promotions
 void Chess::promotion(std::pair<int, int>& pawnOnFinalRank){
     char pieceToPromoteAs;
-    if (pawnOnFinalRank.first != (isWhitePiece? 0: 7)) {
+    if (pawnOnFinalRank.first != (isWhiteTurn? 0: 7)) {
         // False promotion
+        std::cout << "False promotion" << std::endl;
     }else{
         // Get user input of desired piece
-        std::cout << "Which piec to turn into: " << std::endl;
+        std::cout << "Which piece to turn into: " << std::endl;
         while (true) {
             std::cin >> pieceToPromoteAs;
             
             if (std::string("qrnb").find(pieceToPromoteAs) != std::string::npos) {
-                board[pawnOnFinalRank.first][pawnOnFinalRank.second] = pieceToPromoteAs;
+                board[pawnOnFinalRank.first][pawnOnFinalRank.second] = isWhiteTurn?pieceToPromoteAs:toupper(pieceToPromoteAs);
                 break;
             }else std::cout << "Please enter a valid piece: " << std::endl;
         }
@@ -344,7 +344,6 @@ std::vector<std::pair<int, int>> Chess::pieceLogic(bool checkNeeded, char (&bd)[
         }
         case 'r':
 
-            // Straight line
             straights(checkNeeded, piece, bd, place, allMoveForThisPiece);
             break;
         case 'p':
@@ -362,14 +361,32 @@ std::vector<std::pair<int, int>> Chess::pieceLogic(bool checkNeeded, char (&bd)[
 
 
 // Params: board, piece point that is going to en passant and going to get en passanted
-bool Chess::EnPassant(char (&bd)[8][8], std::pair<int, int> &toEP, std::pair<int, int> getEP){
-    if (isWhiteTurn) {
-        std::cout << "Black pawn to EP is at " << pointToPos(toEP) << std::endl;
-        std::cout << "White pawn get EP is at " << pointToPos(getEP) << std::endl;
-        std::cout << canEnPassant << std::endl;
-        
-        
-
-    }
-    return false;
+// Modify specialMoves
+void Chess::EnPassant(char (&bd)[8][8], std::pair<int, int> &toEP, std::pair<int, int> getEP){
+//    specialMoves.clear();
+    PieceMove pm;
+    // p at c5 and e5, if black goes d5, en passant is c5d6 and e5d6
+    // not white's turn, toEP is c5 (3, 2) and e5(3, 4), getEP is d5 (3, 3), destination is d6 (2, 3)
+    
+    pm.pieceT = isWhiteTurn? 'p': 'P';
+    pm.startPoint = toEP;
+    pm.endPoint = {getEP.first + (isWhiteTurn? +1 : -1), getEP.second};
+    pm.startPos = pointToPos(pm.startPoint);
+    pm.endPos = pointToPos(pm.endPoint);
+    pm.note = pm.startPos + pm.endPos;
+    
+    specialMoves.push_back(pm);
+    
+//    if (isWhiteTurn) {
+//        std::cout << "Black pawn to EP is at " << pointToPos(toEP) << std::endl;
+//        std::cout << "White pawn get EP is at " << pointToPos(getEP) << std::endl;
+//        
+//        
+//    }
+//    
+//    if (!isWhiteTurn) {
+//        std::cout << "White pawn to EP is at " << pointToPos(toEP) << std::endl;
+//        std::cout << "Black pawn get EP is at " << pointToPos(getEP) << std::endl;
+//    }
+    return;
 }

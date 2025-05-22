@@ -53,11 +53,12 @@ void Chess::customBoard(int option){
             board[4][3] = 'r';
             break;
         case 3:
-            board[6][0] = 'Q';
-//            board[4][4] = 'p';
-            board[7][5] = 'k';
-            board[5][5] = 'K';
-//            board[6][3] = 'r';
+            board[0][4] = 'K';
+            board[1][1] = 'r';
+            board[2][3] = 'p';
+            board[7][7] = 'k';
+            board[2][5] = 'Q';
+//            board[1][7] = 'R';
             break;
         case 4:
             
@@ -132,13 +133,30 @@ void Chess::findAllPossibleMoves(){
         }
     }
     
-    // En passant
-//    if (canEnPassant) {
-//        <#statements#>
-//    }
+    // Add en passant move, determined by whose turn
+    if (canEnPassant) {
+        for (auto& move: specialMoves)
+        {
+            if (isWhiteTurn) {
+                whiteMoves.push_back(move);
+                notes_w.push_back(move.note);
+            }else{
+                blackMoves.push_back(move);
+                notes_b.push_back(move.note);
+            }
+        }
+    }
     
-    
-    
+    {
+        std::vector<std::string> tempNote;
+        for (auto& move: specialMoves) {
+            tempNote.push_back(move.note);
+        }
+        qfc::processMoves(tempNote);
+        for (size_t i = 0; i < tempNote.size(); i++){
+            specialMoves[i].note = tempNote[i];
+        }
+    }
     
     /// HANDLE UNKNOWN PROBLEMS
     ///
@@ -163,26 +181,30 @@ void Chess::findAllPossibleMoves(){
 
 
 
-// Params: current piece (expressed by loswercase), from point to point & isWhitePiece globally
+// Params: current piece (expressed by loswercase), from point to point & isWhitePiece to determine color globally
 // atCheck examines EVERY move on board to see if its next move exposes own-side king, regardless of who's turn it is.
 bool Chess::atCheck(char piece, std::pair<int, int>& from, std::pair<int, int>& toPoint){
     
     // Clear for every move
     tempMoves.clear();
-    std::pair<int, int> place;
     std::pair<int, int> kingPoint;
     
     // tempBoard simulates the board AFTER move is made
     char tempBoard[8][8];
     memcpy(tempBoard, board, sizeof(tempBoard));
     
+    piece = (isWhitePiece ? piece: toupper(piece));
+    
     // Simulate next move
     tempBoard[from.first][from.second] = '.';
-    tempBoard[toPoint.first][toPoint.second] = (isWhitePiece ? piece: toupper(piece));
+    tempBoard[toPoint.first][toPoint.second] = piece;
     
-    // Find the king's position
-    char kingChar = isWhitePiece ? 'k' : 'K';
-    qfc::findKing(kingPoint, tempBoard, kingChar);
+    // Find the own-side king's position
+    if (piece == 'k' || piece == 'K') kingPoint = toPoint;
+    else{
+        char kingChar = isWhitePiece ? 'k' : 'K';
+        qfc::findKing(kingPoint, tempBoard, kingChar);
+    }
     
     // Loop through each block to get opponent's moves
     for (size_t i = 0; i < 8; i++) {
@@ -193,18 +215,24 @@ bool Chess::atCheck(char piece, std::pair<int, int>& from, std::pair<int, int>& 
             if (isWhitePiece && islower(tempBoard[i][j])) continue;
             if (!isWhitePiece && isupper(tempBoard[i][j])) continue;
             
-            isWhitePiece = !isWhitePiece;
-            place = {i, j};
-            
-            // If piece is white,
-            // &move is a move of a piece, type std::pair
-            for (auto& move: pieceLogic(false, tempBoard, tempBoard[i][j], place)){
+            {
+                std::pair<int, int> place;
+
+                isWhitePiece = !isWhitePiece;
+                place = {i, j};
                 
-                // Add the move
-                tempMoves.push_back(move); // tempMoves store every opponent's move without checkNeeded
+                // If piece is white,
+                // &move is a move of a piece, type std::pair, tempBoard[i][j] is opponent's piece
+                for (auto& move: pieceLogic(false, tempBoard, tempBoard[i][j], place)){
+//                    if (piece == 'k' || piece == 'K') {
+//                        std::cout << "isWhitePiece: " << (!isWhitePiece) << piece << std::endl;
+//                    }
+                    
+                    // Add the move
+                    tempMoves.push_back(move); // tempMoves store every opponent's move without checkNeeded
+                }
+                isWhitePiece = !isWhitePiece;
             }
-            
-            isWhitePiece = !isWhitePiece;
         }
     }
     
@@ -212,6 +240,8 @@ bool Chess::atCheck(char piece, std::pair<int, int>& from, std::pair<int, int>& 
     if (std::find(tempMoves.begin(), tempMoves.end(), kingPoint) != tempMoves.end()) {
         return true;
     }
+    
+    
     return false;
 }
 
@@ -232,13 +262,28 @@ void Chess::newGame(){
         if (isGameEnded()) {
             return;
         }
-                
-        // Init variables
-        initTurn();
+        
+//        printSpecialMoves();
         
         // Get input position
         std::cout << "Enter position: ";
         std::cin >> position;
+        
+        // If en passant, see if move is in specialMoves vec
+        if (std::any_of(specialMoves.begin(), specialMoves.end(), [&](const struct PieceMove& pm) {return pm.note == position;}))
+        {
+            std::cout << "Can en passant!" << std::endl;
+            makeMove(position);
+            if (canEnPassant == false) {
+                initTurn();
+                printBoard();
+                isWhiteTurn = !isWhiteTurn;
+                continue;
+            }
+        }
+        
+        // Reset
+        initTurn();
         
         // Who's turn
         if (isWhiteTurn) {
@@ -257,7 +302,7 @@ void Chess::newGame(){
                 makeMove(position);
             }else continue;
         }
-        
+                        
         printBoard();
         isWhiteTurn = !isWhiteTurn;
         
