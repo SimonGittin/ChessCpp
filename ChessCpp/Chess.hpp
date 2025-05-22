@@ -55,50 +55,77 @@ class Chess {
     std::pair<int, int> coordination;
     std::vector<PieceMove> whiteMoves;
     std::vector<PieceMove> blackMoves;
+    std::vector<PieceMove> specialMoves; // En passant, castle, according to turns
     std::vector<std::pair<int, int>> tempMoves;
 
     bool isWhiteTurn = true;
     bool isWhitePiece = true;
+    bool canEnPassant =false;
+
     
-    // Init board
-    void initializeBoard();
     
-    // Print board
+    
+    
+    
+    // Chess_log.cpp
     void printBoard();
+    void printAllPossibleMoves();
+
     
+    
+    
+    
+    
+    // Chess_movement.cpp
+    //
+    // Check validation
+    std::vector<std::pair<int, int>> pieceLogic(bool checkNeeded, char (&bd)[8][8], char piece, std::pair<int, int>& place);
+    void diagonals(bool, char &piece, char (&bd)[8][8], std::pair<int, int>& place, std::vector<std::pair<int, int>>& vecToEdit);
+    bool bishopCheck(char (&bd)[8][8], std::pair<int, int>& pointA, std::pair<int, int>& pointB);
+    void straights(bool, char &piece, char (&bd)[8][8], std::pair<int, int>& place, std::vector<std::pair<int, int>>& vecToEdit);
+    bool rookCheck(char (&bd)[8][8], std::pair<int, int>& pointA, std::pair<int, int>& pointB);
+    void knight(bool, char &piece, char (&bd)[8][8], std::pair<int, int>& place, std::vector<std::pair<int, int>>& vecToEdit);
+    void king(bool, char &piece, char (&bd)[8][8], std::pair<int, int>& place, std::vector<std::pair<int, int>>& vecToEdit);
+    bool pieceCheck(char (&bd)[8][8], std::pair<int, int>& pointA, std::pair<int, int>& pointB);
+    void pawn(bool, char &piece, char (&bd)[8][8], std::pair<int, int>& place, std::vector<std::pair<int, int>>& vecToEdit);
+    bool pawnCheck(char (&bd)[8][8], std::pair<int, int>& pointA, std::pair<int, int>& pointB);
+    // Promotion
+    void promotion(std::pair<int, int>&);
+    bool EnPassant(char (&bd)[8][8], std::pair<int, int>& pointA, std::pair<int, int> pointB);
+
+    // Chess_status.cpp
+    // Init
+    void initializeBoard();
+    void initTurn();
+    
+    // Checkmate and stalemates
+    bool isGameEnded();
+    
+    // Make a move
+    void makeMove(std::string& pos);
+
+    
+    
+    
+    
+    
+    
+    
+    // Chess.cpp
+    //
     // Option opening or piece placement (for testing)
     void customBoard(int option = 0);
     
     // Simple coordination to notation function => {2, 3} => d6
     std::string pointToPos(std::pair<int, int>&);
-
-    
-    // Check validation when moved from point a to b
-    // Queen == Rook + Bishop
-    bool Pawn(char (&bd)[8][8], std::pair<int, int>& pointA, std::pair<int, int>& pointB);
-    bool Rook(char (&bd)[8][8], std::pair<int, int>& pointA, std::pair<int, int>& pointB);
-    bool Bishop(char (&bd)[8][8], std::pair<int, int>& pointA, std::pair<int, int>& pointB);
-    bool Knight(char (&bd)[8][8], std::pair<int, int>& pointA, std::pair<int, int>& pointB);
-    bool King(char (&bd)[8][8], std::pair<int, int>& pointA, std::pair<int, int>& pointB);
-    
-    // Promotion
-    void promotion(std::pair<int, int>&);
-    
-    void makeMove(std::string& pos);
     
     // Returns a list of all possible moves for player at that round
     void findAllPossibleMoves();
-        
-    // Read the value
-    void printAllPossibleMoves();
-    
-    std::vector<std::pair<int, int>> pieceLogic(bool checkNeeded, char (&bd)[8][8], char piece, std::pair<int, int>& place);
-        
+                
     // Under check or not
     bool atCheck(char piece, std::pair<int, int>& from, std::pair<int, int>& toPoint);
     
-    // Checkmate and stalemates
-    bool isGameEnded();
+    
 
     
 public:

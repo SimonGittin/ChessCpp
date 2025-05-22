@@ -161,3 +161,29 @@ std::vector<std::string> qfc::processMoves(std::vector<std::string>& rawMoves) {
     rawMoves = finalMoves;
     return finalMoves;
 }
+
+
+//void qfc::diagonals(char (&bd)[8][8], std::pair<int, int>& place, std::vector<std::pair<int, int>>& vecToEdit){
+//    std::pair<int, int> move;
+//    for (int i = -9; i < 9; i++) {
+//        if (i == 0) continue;
+//                
+//        // LT to RB
+//        if (place.first + i >= 0 && place.first + i <=7 && place.second + i >= 0 && place.second + i <=7) {
+//            move = {place.first + i, place.second + i};
+//            if (Bishop(bd, place, move)){
+//                vecToEdit.push_back(move);
+//                if (checkNeeded){ if (atCheck(piece, place, move)) vecToEdit.pop_back();};
+//            }
+//        }
+//        
+//        // LB to RT
+//        if (place.first - i >= 0 && place.first - i <=7 && place.second + i >= 0 && place.second + i <=7) {
+//            move = {place.first - i, place.second + i};
+//            if (Bishop(bd, place, move)){
+//                vecToEdit.push_back(move);
+//                if (checkNeeded){ if (atCheck(piece, place, move)) vecToEdit.pop_back();};
+//            }
+//        }
+//    }
+//}
