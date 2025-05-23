@@ -61,6 +61,11 @@ void Chess::customBoard(int option){
 //            board[1][7] = 'R';
             break;
         case 4:
+            board[3][7] = 'k';
+            board[3][5] = 'p';
+            board[3][0] = 'R';
+            board[1][6] = 'P';
+            board[7][7] = 'r';
             
             break;
         default:
@@ -177,6 +182,28 @@ void Chess::findAllPossibleMoves(){
     for (size_t i = 0; i < notes_b.size(); i++) {
         blackMoves[i].note = notes_b[i];
     }
+    
+    // Is castling possible?
+    castling();
+    if (canCastle[8] && canCastle[0] && canCastle[4]) {
+        pm.note = "oo";
+        whiteMoves.push_back(pm);
+    }
+    
+    if (canCastle[8] && canCastle[1] && canCastle[5]) {
+        pm.note = "ooo";
+        whiteMoves.push_back(pm);
+    }
+    
+    if (canCastle[9] && canCastle[2] && canCastle[6]) {
+        pm.note = "oo";
+        blackMoves.push_back(pm);
+    }
+    
+    if (canCastle[9] && canCastle[3] && canCastle[7]) {
+        pm.note = "ooo";
+        blackMoves.push_back(pm);
+    }
 }
 
 
@@ -252,8 +279,11 @@ void Chess::newGame(){
     std::cout << "Game starts!"<< std::endl;
     initializeBoard();
     printBoard();
+//    castling(true);
     // Updates every turn
     while (true) {
+        
+        
         // Calculate all possible moves
         findAllPossibleMoves();
         printAllPossibleMoves();
@@ -265,9 +295,21 @@ void Chess::newGame(){
         
 //        printSpecialMoves();
         
+        for (auto i : canCastle) std::cout << i << "    ";
+        
         // Get input position
         std::cout << "Enter position: ";
         std::cin >> position;
+        
+//        if (position == "oo") {
+//            std::cout << "Castle king side" << std::endl;
+//            castling(true);
+//        }
+//        
+//        if (position == "ooo") {
+//            std::cout << "Castle queen side" << std::endl;
+//            castling(false);
+//        }
         
         // If en passant, see if move is in specialMoves vec
         if (std::any_of(specialMoves.begin(), specialMoves.end(), [&](const struct PieceMove& pm) {return pm.note == position;}))

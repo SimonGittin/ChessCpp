@@ -55,3 +55,5 @@ void Chess::printTempMoves(char (&bd)[8][8]){
         }
     }
 }
+
+

@@ -45,6 +45,9 @@ struct PieceMove {
     char pieceT;
     
     std::string note;
+    
+//    PieceMove();
+//    PieceMove(const std::string& n): note(n) {}
 };
 
 
@@ -62,8 +65,8 @@ class Chess {
     bool isWhitePiece = true;
     bool canEnPassant =false;
 
-    
-    
+    // White king side, white queen side, black king side, black queen side [4] -> Whole game [4] + temporary [4] + castled [2]
+    bool canCastle[10] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
     
     
     
@@ -104,8 +107,8 @@ class Chess {
     // Make a move
     void makeMove(std::string& pos);
 
-    // Make en passant
-    void makeEnPassant(std::string& pos);
+    // Check castling
+    void castling();
     
     
     

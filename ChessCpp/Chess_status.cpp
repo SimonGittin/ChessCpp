@@ -11,7 +11,7 @@
 void Chess::initializeBoard(){
     // Fill board with .
     memset(board, '.', sizeof(board));
-    customBoard(0);
+    customBoard(4);
 }
 
 void Chess::initTurn(){
@@ -55,6 +55,58 @@ void Chess::makeMove(std::string& pos){
     
     std::vector<PieceMove> moves = isWhiteTurn ? whiteMoves : blackMoves;
     
+//    if (pos == "oo") {
+//        std::cout << "Castle king side" << std::endl;
+//        castling(true);
+//        return;
+//    }
+//    
+//    if (pos == "ooo") {
+//        std::cout << "Castle queen side" << std::endl;
+//        castling(false);
+//        return;
+//    }
+    
+    // Make castling
+    // White king side
+    if (canCastle[8] && canCastle[0] && canCastle[4] && pos == "oo" && isWhiteTurn) {
+        board[7][4] = '.';
+        board[7][7] = '.';
+        board[7][6] = 'k';
+        board[7][5] = 'r';
+        canCastle[8] = 0;
+        return;
+    }
+    
+    // White queen side
+    if (canCastle[8] && canCastle[1] && canCastle[5] && pos == "ooo" && isWhiteTurn) {
+        board[7][0] = '.';
+        board[7][4] = '.';
+        board[7][2] = 'k';
+        board[7][3] = 'r';
+        canCastle[8] = 0;
+        return;
+    }
+    
+    // Black king side
+    if (canCastle[9] && canCastle[2] && canCastle[6] && pos == "oo" && !isWhiteTurn) {
+        board[0][4] = '.';
+        board[0][7] = '.';
+        board[0][6] = 'K';
+        board[0][5] = 'R';
+        canCastle[9] = 0;
+        return;
+    }
+    
+    // Black quen side
+    if (canCastle[9] && canCastle[3] && canCastle[7] && pos == "ooo" && !isWhiteTurn) {
+        board[0][0] = '.';
+        board[0][4] = '.';
+        board[0][2] = 'K';
+        board[0][3] = 'R';
+        canCastle[9] = 0;
+        return;
+    }
     
     
     // Iterate through pieceMove to get index of pm.note == position
@@ -134,14 +186,55 @@ void Chess::makeMove(std::string& pos){
     }
 }
 
+void Chess::castling(){
+    // If isKingSide = false, then it's queen side
+    
+    // Priority
+    // canCastle[8, 9] > [0 - 3] > [4 - 7]
+    
+//    if (!canCastle[8] && isWhiteTurn) return;
+//    if (!canCastle[9] && !isWhiteTurn) return;
 
-void Chess::makeEnPassant(std::string &pos)
-{
-    if (isWhiteTurn)
-    if(std::any_of(whiteMoves.begin(), whiteMoves.end(), [&](const struct PieceMove& pm) {return pm.note == position;}))
-    {
-        
+    
+    // Everytime this function is called, update temporary bool to true
+    canCastle[4] = 1;
+    canCastle[5] = 1;
+    canCastle[6] = 1;
+    canCastle[7] = 1;
+
+    
+    // 1. Rooks and king must at position and cannot be moved, otherwise lose castle right for that side (during game)
+    if (board[7][7] != 'r') canCastle[0] = 0;
+    if (board[7][0] != 'r') canCastle[1] = 0;
+    if (board[0][7] != 'R') canCastle[2] = 0;
+    if (board[0][0] != 'R') canCastle[3] = 0;
+    if (board[7][4] != 'k') canCastle[8] = 0;
+    if (board[0][4] != 'K') canCastle[9] = 0;
+
+    // 2. King's left and right 2 blocks are not occupied or can be reached by opponent (temporary)
+    if (board[7][5] != '.' || board[7][6] != '.') canCastle[4] = 0;
+    if (board[7][2] != '.' || board[7][3] != '.') canCastle[5] = 0;
+    if (board[0][5] != '.' || board[0][6] != '.') canCastle[6] = 0;
+    if (board[0][2] != '.' || board[0][3] != '.') canCastle[7] = 0;
+    
+    for (auto& move: blackMoves) {
+        if (move.endPoint == std::pair<int, int>{7,5} || move.endPoint == std::pair<int, int>{7,6}) canCastle[4] = 0;
+        if (move.endPoint == std::pair<int, int>{7,2} || move.endPoint == std::pair<int, int>{7,3}) canCastle[5] = 0;
+        if (move.endPoint == std::pair<int, int>{7,4}) {canCastle[4] = 0; canCastle[5] = 0;}
     }
+    for (auto& move: whiteMoves) {
+        if (move.endPoint == std::pair<int, int>{0,5} || move.endPoint == std::pair<int, int>{0,6}) canCastle[6] = 0;
+        if (move.endPoint == std::pair<int, int>{0,2} || move.endPoint == std::pair<int, int>{0,3}) canCastle[7] = 0;
+        if (move.endPoint == std::pair<int, int>{0,4}) {canCastle[6] = 0; canCastle[7] = 0;}
+    }
+
+    
+
+    
+    // Make a move here
+    // 0 1 2 3
+    // 4 5 6 7
+    // 8   9
     
     
 }
