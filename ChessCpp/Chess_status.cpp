@@ -14,10 +14,10 @@ void Chess::initializeBoard(){
     customBoard(4);
 }
 
-void Chess::initTurn(){
-    canEnPassant = false;
-    specialMoves.clear();
-}
+//void Chess::initTurn(){
+//    canEnPassant = false;
+//    specialMoves.clear();
+//}
 
 bool Chess::isGameEnded(){
     
@@ -54,18 +54,6 @@ bool Chess::isGameEnded(){
 void Chess::makeMove(std::string& pos){
     
     std::vector<PieceMove> moves = isWhiteTurn ? whiteMoves : blackMoves;
-    
-//    if (pos == "oo") {
-//        std::cout << "Castle king side" << std::endl;
-//        castling(true);
-//        return;
-//    }
-//    
-//    if (pos == "ooo") {
-//        std::cout << "Castle queen side" << std::endl;
-//        castling(false);
-//        return;
-//    }
     
     // Make castling
     // White king side
@@ -116,15 +104,10 @@ void Chess::makeMove(std::string& pos){
         // Get the move's index
         size_t idx = std::distance(moves.begin(), it);
         
-        
-        
         // Promotion of pawn
         if (moves[idx].pieceT == (isWhiteTurn ? 'p': 'P') && moves[idx].endPoint.first == (isWhiteTurn? 0: 7)) {
             promotion(moves[idx].endPoint);
         }
-//        else if (moves[idx].pieceT == 'p' && moves[idx].endPoint.first == (isWhiteTurn? 0: 7)) {
-//            promotion(moves[idx].endPoint);
-//        }
         
         // Normal piece move
         else{

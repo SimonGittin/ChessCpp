@@ -64,6 +64,7 @@ class Chess {
     bool isWhiteTurn = true;
     bool isWhitePiece = true;
     bool canEnPassant =false;
+    bool isSimulatingEnPassant = false;
 
     // White king side, white queen side, black king side, black queen side [4] -> Whole game [4] + temporary [4] + castled [2]
     bool canCastle[10] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1};

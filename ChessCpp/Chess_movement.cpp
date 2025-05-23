@@ -369,24 +369,20 @@ void Chess::EnPassant(char (&bd)[8][8], std::pair<int, int> &toEP, std::pair<int
     // not white's turn, toEP is c5 (3, 2) and e5(3, 4), getEP is d5 (3, 3), destination is d6 (2, 3)
     
     pm.pieceT = isWhiteTurn? 'p': 'P';
-    pm.startPoint = toEP;
-    pm.endPoint = {getEP.first + (isWhiteTurn? +1 : -1), getEP.second};
+    pm.startPoint = toEP;                                               // (3, 2)
+    pm.endPoint = {getEP.first + (isWhiteTurn? +1 : -1), getEP.second}; // (2, 3) #(3, 3) to be erased
     pm.startPos = pointToPos(pm.startPoint);
     pm.endPos = pointToPos(pm.endPoint);
     pm.note = pm.startPos + pm.endPos;
     
     specialMoves.push_back(pm);
     
-//    if (isWhiteTurn) {
-//        std::cout << "Black pawn to EP is at " << pointToPos(toEP) << std::endl;
-//        std::cout << "White pawn get EP is at " << pointToPos(getEP) << std::endl;
-//        
-//        
-//    }
-//    
-//    if (!isWhiteTurn) {
-//        std::cout << "White pawn to EP is at " << pointToPos(toEP) << std::endl;
-//        std::cout << "Black pawn get EP is at " << pointToPos(getEP) << std::endl;
-//    }
+    // Handle rare case -> board #4
+    isSimulatingEnPassant = true;
+    {
+        isWhitePiece = !isWhitePiece;
+        if (atCheck(isWhiteTurn? 'p': 'P', pm.startPoint, pm.endPoint)) specialMoves.pop_back();
+        isWhitePiece = !isWhitePiece;
+    }
     return;
 }

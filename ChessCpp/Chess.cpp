@@ -65,7 +65,10 @@ void Chess::customBoard(int option){
             board[3][5] = 'p';
             board[3][0] = 'R';
             board[1][6] = 'P';
-            board[7][7] = 'r';
+            board[4][7] = 'r';
+            board[4][4] = 'K';
+            board[4][5] = 'P';
+            board[6][6] = 'p';
             
             break;
         default:
@@ -152,6 +155,7 @@ void Chess::findAllPossibleMoves(){
         }
     }
     
+    // Process notes in specialMoves
     {
         std::vector<std::string> tempNote;
         for (auto& move: specialMoves) {
@@ -184,7 +188,7 @@ void Chess::findAllPossibleMoves(){
     }
     
     // Is castling possible?
-    castling();
+    castling(); // Check
     if (canCastle[8] && canCastle[0] && canCastle[4]) {
         pm.note = "oo";
         whiteMoves.push_back(pm);
@@ -226,6 +230,10 @@ bool Chess::atCheck(char piece, std::pair<int, int>& from, std::pair<int, int>& 
     tempBoard[from.first][from.second] = '.';
     tempBoard[toPoint.first][toPoint.second] = piece;
     
+    // En passant
+    if (isSimulatingEnPassant) tempBoard[from.first][toPoint.second] = '.';
+    isSimulatingEnPassant = false;
+    
     // Find the own-side king's position
     if (piece == 'k' || piece == 'K') kingPoint = toPoint;
     else{
@@ -242,7 +250,7 @@ bool Chess::atCheck(char piece, std::pair<int, int>& from, std::pair<int, int>& 
             if (isWhitePiece && islower(tempBoard[i][j])) continue;
             if (!isWhitePiece && isupper(tempBoard[i][j])) continue;
             
-            {
+            { // ## Scope starts
                 std::pair<int, int> place;
 
                 isWhitePiece = !isWhitePiece;
@@ -251,15 +259,12 @@ bool Chess::atCheck(char piece, std::pair<int, int>& from, std::pair<int, int>& 
                 // If piece is white,
                 // &move is a move of a piece, type std::pair, tempBoard[i][j] is opponent's piece
                 for (auto& move: pieceLogic(false, tempBoard, tempBoard[i][j], place)){
-//                    if (piece == 'k' || piece == 'K') {
-//                        std::cout << "isWhitePiece: " << (!isWhitePiece) << piece << std::endl;
-//                    }
                     
                     // Add the move
                     tempMoves.push_back(move); // tempMoves store every opponent's move without checkNeeded
                 }
                 isWhitePiece = !isWhitePiece;
-            }
+            } // ## Scope ends
         }
     }
     
@@ -279,7 +284,7 @@ void Chess::newGame(){
     std::cout << "Game starts!"<< std::endl;
     initializeBoard();
     printBoard();
-//    castling(true);
+
     // Updates every turn
     while (true) {
         
@@ -292,24 +297,10 @@ void Chess::newGame(){
         if (isGameEnded()) {
             return;
         }
-        
-//        printSpecialMoves();
-        
-        for (auto i : canCastle) std::cout << i << "    ";
-        
+                        
         // Get input position
         std::cout << "Enter position: ";
         std::cin >> position;
-        
-//        if (position == "oo") {
-//            std::cout << "Castle king side" << std::endl;
-//            castling(true);
-//        }
-//        
-//        if (position == "ooo") {
-//            std::cout << "Castle queen side" << std::endl;
-//            castling(false);
-//        }
         
         // If en passant, see if move is in specialMoves vec
         if (std::any_of(specialMoves.begin(), specialMoves.end(), [&](const struct PieceMove& pm) {return pm.note == position;}))
@@ -317,7 +308,10 @@ void Chess::newGame(){
             std::cout << "Can en passant!" << std::endl;
             makeMove(position);
             if (canEnPassant == false) {
-                initTurn();
+                
+                // Reset
+                canEnPassant = false;
+                specialMoves.clear();
                 printBoard();
                 isWhiteTurn = !isWhiteTurn;
                 continue;
@@ -325,7 +319,8 @@ void Chess::newGame(){
         }
         
         // Reset
-        initTurn();
+        canEnPassant = false;
+        specialMoves.clear();
         
         // Who's turn
         if (isWhiteTurn) {
