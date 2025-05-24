@@ -362,7 +362,7 @@ std::vector<std::pair<int, int>> Chess::pieceLogic(bool checkNeeded, char (&bd)[
 
 // Params: board, piece point that is going to en passant and going to get en passanted
 // Modify specialMoves
-void Chess::EnPassant(char (&bd)[8][8], std::pair<int, int> &toEP, std::pair<int, int> getEP){
+void Chess::enPassant(char (&bd)[8][8], std::pair<int, int> &toEP, std::pair<int, int> getEP){
 //    specialMoves.clear();
     PieceMove pm;
     // p at c5 and e5, if black goes d5, en passant is c5d6 and e5d6

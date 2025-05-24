@@ -14,11 +14,6 @@ void Chess::initializeBoard(){
     customBoard(4);
 }
 
-//void Chess::initTurn(){
-//    canEnPassant = false;
-//    specialMoves.clear();
-//}
-
 bool Chess::isGameEnded(){
     
     std::pair<int, int> kPoint;
@@ -56,6 +51,10 @@ void Chess::makeMove(std::string& pos){
     std::vector<PieceMove> moves = isWhiteTurn ? whiteMoves : blackMoves;
     
     // Make castling
+    // 0 1 2 3
+    // 4 5 6 7
+    // 8   9
+    //
     // White king side
     if (canCastle[8] && canCastle[0] && canCastle[4] && pos == "oo" && isWhiteTurn) {
         board[7][4] = '.';
@@ -144,7 +143,7 @@ void Chess::makeMove(std::string& pos){
                     canEnPassant = true;
                     
                     // Takes opponent's pawn start and end point
-                    EnPassant(board, point, {point.first, point.second - i});
+                    enPassant(board, point, {point.first, point.second - i});
                 }
             }
         }
@@ -162,7 +161,7 @@ void Chess::makeMove(std::string& pos){
                     canEnPassant = true;
                     
                     // Takes opponent's pawn start and end point
-                    EnPassant(board, point, {point.first, point.second - i});
+                    enPassant(board, point, {point.first, point.second - i});
                 }
             }
         }
@@ -170,15 +169,9 @@ void Chess::makeMove(std::string& pos){
 }
 
 void Chess::castling(){
-    // If isKingSide = false, then it's queen side
-    
     // Priority
     // canCastle[8, 9] > [0 - 3] > [4 - 7]
-    
-//    if (!canCastle[8] && isWhiteTurn) return;
-//    if (!canCastle[9] && !isWhiteTurn) return;
-
-    
+    //
     // Everytime this function is called, update temporary bool to true
     canCastle[4] = 1;
     canCastle[5] = 1;
@@ -210,14 +203,4 @@ void Chess::castling(){
         if (move.endPoint == std::pair<int, int>{0,2} || move.endPoint == std::pair<int, int>{0,3}) canCastle[7] = 0;
         if (move.endPoint == std::pair<int, int>{0,4}) {canCastle[6] = 0; canCastle[7] = 0;}
     }
-
-    
-
-    
-    // Make a move here
-    // 0 1 2 3
-    // 4 5 6 7
-    // 8   9
-    
-    
 }

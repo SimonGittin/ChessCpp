@@ -70,6 +70,7 @@ void Chess::customBoard(int option){
             board[4][5] = 'P';
             board[6][6] = 'p';
             
+            // g4, g5
             break;
         default:
             break;
@@ -96,9 +97,6 @@ void Chess::findAllPossibleMoves(){
     std::vector<std::string> notes_w;
     std::vector<std::string> notes_b;
 
-    
-    
-    
     // Using coordination, find pieces from left-top to right-top, ends at right-bottom
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
@@ -135,7 +133,6 @@ void Chess::findAllPossibleMoves(){
                 if (std::isupper(board[i][j])) {
                     notes_b.push_back((pm.pieceT == 'P' ? "" : std::string(1, pm.pieceT)) + pm.startPos + pm.endPos);
                     blackMoves.push_back(pm);
-
                 }
             }
         }
@@ -288,10 +285,9 @@ void Chess::newGame(){
     // Updates every turn
     while (true) {
         
-        
         // Calculate all possible moves
         findAllPossibleMoves();
-        printAllPossibleMoves();
+//        printAllPossibleMoves();
 
         // Track game status
         if (isGameEnded()) {
@@ -341,6 +337,7 @@ void Chess::newGame(){
         }
                         
         printBoard();
+        std::cout << engine_PieceCount(board) << std::endl;
         isWhiteTurn = !isWhiteTurn;
         
     }
